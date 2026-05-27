@@ -1,43 +1,111 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, DollarSign, Package, ShoppingCart, Users } from "lucide-react";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { SalesLineChart } from "@/components/charts/SalesLineChart";
 
-const stats = [
-  {
-    title: "Ingresos Totales",
-    value: "€24,580",
-    change: "+12.5%",
-    trend: "up",
-    icon: DollarSign,
-    description: "vs mes anterior",
-  },
-  {
-    title: "Ventas",
-    value: "1,429",
-    change: "+8.2%",
-    trend: "up",
-    icon: ShoppingCart,
-    description: "vs mes anterior",
-  },
-  {
-    title: "Productos en Stock",
-    value: "847",
-    change: "-3.1%",
-    trend: "down",
-    icon: Package,
-    description: "12 productos bajos",
-  },
-  {
-    title: "Nuevos Clientes",
-    value: "156",
-    change: "+24.3%",
-    trend: "up",
-    icon: Users,
-    description: "vs mes anterior",
-  },
-];
+interface Kpis {
+  ingresos_totales: number;
+  ingresos_cambio: number;
+  ventas_totales: number;
+  ventas_cambio: number;
+  productos_stock: number;
+  stock_bajo: number;
+  clientes_nuevos: number;
+  clientes_cambio: number;
+}
+
+interface VentaHistorica {
+  fecha: string;
+  ventas: number;
+  pedidos: number;
+}
+
+interface AlertaStock {
+  id: number;
+  nombre: string;
+  stock: number;
+  stock_minimo: number;
+}
+
+interface UltimaVenta {
+  id: number;
+  codigo: string;
+  cliente: string;
+  total: number;
+  fecha: string;
+}
+
+interface DashboardData {
+  kpis: Kpis;
+  ventas_historicas: VentaHistorica[];
+  alertas_stock: AlertaStock[];
+  ultimas_ventas: UltimaVenta[];
+}
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api
+      .getDashboard()
+      .then((d) => setData(d as DashboardData))
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <LoadingSpinner text="Cargando dashboard..." />;
+  if (error)
+    return (
+      <p className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-md">
+        Error: {error}
+      </p>
+    );
+  if (!data) return null;
+
+  const { kpis, ventas_historicas, alertas_stock, ultimas_ventas } = data;
+
+  const stats = [
+    {
+      title: "Ingresos Totales",
+      value: `€${Number(kpis.ingresos_totales).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: `${kpis.ingresos_cambio >= 0 ? "+" : ""}${kpis.ingresos_cambio}%`,
+      trend: kpis.ingresos_cambio >= 0 ? "up" : "down",
+      icon: DollarSign,
+      description: "vs mes anterior",
+    },
+    {
+      title: "Ventas",
+      value: kpis.ventas_totales.toLocaleString(),
+      change: `${kpis.ventas_cambio >= 0 ? "+" : ""}${kpis.ventas_cambio}%`,
+      trend: kpis.ventas_cambio >= 0 ? "up" : "down",
+      icon: ShoppingCart,
+      description: "vs mes anterior",
+    },
+    {
+      title: "Productos en Stock",
+      value: kpis.productos_stock.toLocaleString(),
+      change: `${kpis.stock_bajo} bajos`,
+      trend: kpis.stock_bajo > 0 ? "down" : "up",
+      icon: Package,
+      description: "productos con stock bajo",
+    },
+    {
+      title: "Nuevos Clientes",
+      value: kpis.clientes_nuevos.toLocaleString(),
+      change: `${kpis.clientes_cambio >= 0 ? "+" : ""}${kpis.clientes_cambio}%`,
+      trend: kpis.clientes_cambio >= 0 ? "up" : "down",
+      icon: Users,
+      description: "vs mes anterior",
+    },
+  ];
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -81,62 +149,78 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Ventas Recientes</CardTitle>
-            <CardDescription>Últimas transacciones realizadas</CardDescription>
+            <CardTitle>Evolución de Ventas</CardTitle>
+            <CardDescription>Ingresos por período</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                      <ShoppingCart className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Venta #{1000 + i}</p>
-                      <p className="text-xs text-muted-foreground">Producto {i} x {i + 1}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">€{(i * 45.99).toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">Hace {i}h</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {ventas_historicas.length > 0 ? (
+              <SalesLineChart data={ventas_historicas} />
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">Sin datos históricos</p>
+            )}
           </CardContent>
         </Card>
 
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Alertas de Inventario</CardTitle>
-            <CardDescription>Productos con stock bajo</CardDescription>
+            <CardDescription>{alertas_stock.length} productos con stock bajo</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Laptop HP ProBook", stock: 3, min: 10 },
-                { name: "Monitor 27\" 4K", stock: 5, min: 15 },
-                { name: "Teclado Mecánico", stock: 2, min: 8 },
-              ].map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Mínimo: {item.min} unidades
-                    </p>
-                  </div>
-                  <div className="text-right">
+            {alertas_stock.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Sin alertas de stock</p>
+            ) : (
+              <div className="space-y-4">
+                {alertas_stock.slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.nombre}</p>
+                      <p className="text-xs text-muted-foreground">Mínimo: {item.stock_minimo} unidades</p>
+                    </div>
                     <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
                       {item.stock} restantes
                     </span>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ventas Recientes</CardTitle>
+          <CardDescription>Últimas transacciones realizadas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {ultimas_ventas.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No hay ventas registradas</p>
+          ) : (
+            <div className="space-y-4">
+              {ultimas_ventas.map((venta) => (
+                <div key={venta.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                      <ShoppingCart className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{venta.codigo}</p>
+                      <p className="text-xs text-muted-foreground">{venta.cliente}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">€{Number(venta.total).toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(venta.fecha).toLocaleDateString("es-ES")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

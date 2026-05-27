@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Boxes,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   className?: string;
@@ -43,6 +44,11 @@ const bottomNavigation = [
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
 
   return (
     <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0", className)}>
@@ -112,11 +118,11 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="p-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-              <span className="text-sidebar-accent-foreground text-sm font-medium">JD</span>
+              <span className="text-sidebar-accent-foreground text-sm font-medium">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sidebar-foreground text-sm font-medium truncate">John Doe</p>
-              <p className="text-sidebar-foreground/60 text-xs truncate">Admin</p>
+              <p className="text-sidebar-foreground text-sm font-medium truncate">{user?.name ?? "..."}</p>
+              <p className="text-sidebar-foreground/60 text-xs truncate capitalize">{user?.rol ?? ""}</p>
             </div>
           </div>
         </div>
@@ -131,11 +137,13 @@ export function MobileSidebar() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger>
-        <Button variant="ghost" size="icon" className="lg:hidden">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Abrir menú</span>
-        </Button>
+      <SheetTrigger
+        render={
+          <Button variant="ghost" size="icon" className="lg:hidden" />
+        }
+      >
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Abrir menú</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0 bg-sidebar">
         <div className="flex flex-col h-full">

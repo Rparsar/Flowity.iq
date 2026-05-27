@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,25 +13,65 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, ShoppingCart, TrendingUp, Calendar, Download } from "lucide-react";
+import { Plus, Download } from "lucide-react";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
-const sales = [
-  { id: "V-2024-001", date: "2024-01-15", customer: "Cliente A", items: 3, total: 245.99, status: "completed" },
-  { id: "V-2024-002", date: "2024-01-14", customer: "Cliente B", items: 1, total: 89.99, status: "completed" },
-  { id: "V-2024-003", date: "2024-01-14", customer: "Cliente C", items: 5, total: 567.50, status: "pending" },
-  { id: "V-2024-004", date: "2024-01-13", customer: "Cliente D", items: 2, total: 178.00, status: "completed" },
-  { id: "V-2024-005", date: "2024-01-12", customer: "Cliente E", items: 4, total: 432.25, status: "cancelled" },
-];
+interface Venta {
+  id: number;
+  codigo: string;
+  fecha: string;
+  cliente: string;
+  total: number;
+  estado: string;
+  detalles?: { id: number }[];
+}
+
+interface VentasResponse {
+  total: number;
+  ventas: Venta[];
+}
+
+interface Estadisticas {
+  total_ventas: number;
+  total_ingresos: number;
+  completadas: number;
+  pendientes: number;
+  ticket_medio: number;
+}
 
 export default function VentasPage() {
+  const [ventas, setVentas] = useState<Venta[]>([]);
+  const [stats, setStats] = useState<Estadisticas | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchData = () => {
+    setLoading(true);
+    Promise.all([api.getVentas(), api.getEstadisticasVentas()])
+      .then(([v, s]) => {
+        setVentas((v as VentasResponse).ventas ?? []);
+        setStats(s as Estadisticas);
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  if (loading) return <LoadingSpinner text="Cargando ventas..." />;
+  if (error)
+    return (
+      <p className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-md">
+        Error: {error}
+      </p>
+    );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Ventas</h1>
-          <p className="text-muted-foreground mt-1">
-            Registro y seguimiento de ventas
-          </p>
+          <p className="text-muted-foreground mt-1">Registro y seguimiento de ventas</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
@@ -44,20 +88,20 @@ export default function VentasPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Ventas Hoy</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Ventas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,429</div>
-            <p className="text-xs text-muted-foreground">+8.2% vs ayer</p>
+            <div className="text-2xl font-bold">{stats?.total_ventas ?? 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Ingresos Hoy</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Ingresos Totales</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€3,456.80</div>
-            <p className="text-xs text-muted-foreground">+12.5% vs ayer</p>
+            <div className="text-2xl font-bold">
+              €{Number(stats?.total_ingresos ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -65,16 +109,19 @@ export default function VentasPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Medio</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€87.50</div>
-            <p className="text-xs text-muted-foreground">+3.2% vs mes anterior</p>
+            <div className="text-2xl font-bold">
+              €{Number(stats?.ticket_medio ?? 0).toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Ventas Pendientes</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">8</div>
+            <div className={`text-2xl font-bold ${(stats?.pendientes ?? 0) > 0 ? "text-warning" : ""}`}>
+              {stats?.pendientes ?? 0}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -82,7 +129,7 @@ export default function VentasPage() {
       <Card>
         <CardHeader>
           <CardTitle>Historial de Ventas</CardTitle>
-          <CardDescription>Últimas transacciones registradas</CardDescription>
+          <CardDescription>{ventas.length} transacciones registradas</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -91,32 +138,40 @@ export default function VentasPage() {
                 <TableHead>ID Venta</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Productos</TableHead>
+                <TableHead>Artículos</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Estado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sales.map((sale) => (
-                <TableRow key={sale.id}>
-                  <TableCell className="font-medium">{sale.id}</TableCell>
-                  <TableCell>{sale.date}</TableCell>
-                  <TableCell>{sale.customer}</TableCell>
-                  <TableCell>{sale.items} items</TableCell>
-                  <TableCell>€{sale.total.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {sale.status === "completed" && (
-                      <Badge className="bg-success/10 text-success hover:bg-success/20">Completada</Badge>
-                    )}
-                    {sale.status === "pending" && (
-                      <Badge className="bg-warning/10 text-warning hover:bg-warning/20">Pendiente</Badge>
-                    )}
-                    {sale.status === "cancelled" && (
-                      <Badge variant="destructive">Cancelada</Badge>
-                    )}
+              {ventas.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    No hay ventas registradas
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                ventas.map((sale) => (
+                  <TableRow key={sale.id}>
+                    <TableCell className="font-medium">{sale.codigo}</TableCell>
+                    <TableCell>{new Date(sale.fecha).toLocaleDateString("es-ES")}</TableCell>
+                    <TableCell>{sale.cliente}</TableCell>
+                    <TableCell>{sale.detalles?.length ?? "—"} items</TableCell>
+                    <TableCell>€{Number(sale.total).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {sale.estado === "completada" && (
+                        <Badge className="bg-success/10 text-success hover:bg-success/20">Completada</Badge>
+                      )}
+                      {sale.estado === "pendiente" && (
+                        <Badge className="bg-warning/10 text-warning hover:bg-warning/20">Pendiente</Badge>
+                      )}
+                      {sale.estado === "cancelada" && (
+                        <Badge variant="destructive">Cancelada</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

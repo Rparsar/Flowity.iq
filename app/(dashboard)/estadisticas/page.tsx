@@ -1,31 +1,79 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, DollarSign, Users, Package, BarChart3 } from "lucide-react";
+import { TrendingUp, DollarSign, ShoppingCart, Package, BarChart3 } from "lucide-react";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { MonthlySalesBarChart } from "@/components/charts/MonthlySalesBarChart";
+import { SalesPieChart } from "@/components/charts/SalesPieChart";
 
-const monthlyData = [
-  { month: "Ene", sales: 12500, orders: 145 },
-  { month: "Feb", sales: 14200, orders: 168 },
-  { month: "Mar", sales: 11800, orders: 132 },
-  { month: "Apr", sales: 15600, orders: 189 },
-  { month: "May", sales: 18900, orders: 224 },
-  { month: "Jun", sales: 21300, orders: 256 },
-];
+interface Kpis {
+  ingresos_totales: number;
+  ventas_totales: number;
+  productos_stock: number;
+  stock_bajo: number;
+}
 
-const topProducts = [
-  { name: "Teclado Mecánico RGB", sales: 156, revenue: 14024.44, growth: 28.5 },
-  { name: "Laptop HP ProBook", sales: 89, revenue: 80099.11, growth: 15.2 },
-  { name: "Monitor 27\" 4K", sales: 124, revenue: 43398.76, growth: -5.3 },
-  { name: "Auriculares Bluetooth", sales: 203, revenue: 16237.97, growth: 42.8 },
-];
+interface Estadisticas {
+  total_ventas: number;
+  total_ingresos: number;
+  completadas: number;
+  pendientes: number;
+  ticket_medio: number;
+}
+
+interface VentaHistorica {
+  fecha: string;
+  ventas: number;
+  pedidos: number;
+}
+
+interface DashboardData {
+  kpis: Kpis;
+  ventas_historicas: VentaHistorica[];
+}
 
 export default function EstadisticasPage() {
+  const [dashData, setDashData] = useState<DashboardData | null>(null);
+  const [stats, setStats] = useState<Estadisticas | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    Promise.all([api.getDashboard(), api.getEstadisticasVentas()])
+      .then(([d, s]) => {
+        setDashData(d as DashboardData);
+        setStats(s as Estadisticas);
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <LoadingSpinner text="Cargando estadísticas..." />;
+  if (error)
+    return (
+      <p className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-md">
+        Error: {error}
+      </p>
+    );
+
+  const kpis = dashData?.kpis;
+  const historicas = dashData?.ventas_historicas ?? [];
+
+  const pieData = stats
+    ? [
+        { name: "Completadas", value: stats.completadas },
+        { name: "Pendientes", value: stats.pendientes },
+        { name: "Canceladas", value: stats.total_ventas - stats.completadas - stats.pendientes },
+      ].filter((d) => d.value > 0)
+    : [];
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Estadísticas</h1>
-        <p className="text-muted-foreground mt-1">
-          Análisis detallado del rendimiento de tu negocio
-        </p>
+        <p className="text-muted-foreground mt-1">Análisis detallado del rendimiento de tu negocio</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -33,15 +81,12 @@ export default function EstadisticasPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              Ventas Totales (YTD)
+              Ingresos Totales
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€94,300</div>
-            <div className="flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-xs text-success">+18.5%</span>
-              <span className="text-xs text-muted-foreground">vs año anterior</span>
+            <div className="text-2xl font-bold">
+              €{Number(kpis?.ingresos_totales ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -53,27 +98,26 @@ export default function EstadisticasPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€87.50</div>
+            <div className="text-2xl font-bold">
+              €{Number(stats?.ticket_medio ?? 0).toFixed(2)}
+            </div>
             <div className="flex items-center gap-1 mt-1">
               <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-xs text-success">+3.2%</span>
-              <span className="text-xs text-muted-foreground">vs mes anterior</span>
+              <span className="text-xs text-muted-foreground">sobre ventas completadas</span>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Clientes Nuevos
+              <ShoppingCart className="h-4 w-4" />
+              Ventas Completadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">342</div>
+            <div className="text-2xl font-bold">{stats?.completadas ?? 0}</div>
             <div className="flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-xs text-success">+24.8%</span>
-              <span className="text-xs text-muted-foreground">vs año anterior</span>
+              <span className="text-xs text-muted-foreground">de {stats?.total_ventas ?? 0} totales</span>
             </div>
           </CardContent>
         </Card>
@@ -81,16 +125,16 @@ export default function EstadisticasPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Rotación Inventario
+              Productos en Stock
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8.4x</div>
-            <div className="flex items-center gap-1 mt-1">
-              <TrendingDown className="h-3 w-3 text-warning" />
-              <span className="text-xs text-warning">-1.2%</span>
-              <span className="text-xs text-muted-foreground">vs mes anterior</span>
-            </div>
+            <div className="text-2xl font-bold">{kpis?.productos_stock ?? 0}</div>
+            {(kpis?.stock_bajo ?? 0) > 0 && (
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-xs text-destructive">{kpis?.stock_bajo} con stock bajo</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -99,53 +143,28 @@ export default function EstadisticasPage() {
         <Card>
           <CardHeader>
             <CardTitle>Evolución Mensual</CardTitle>
-            <CardDescription>Ventas y pedidos por mes</CardDescription>
+            <CardDescription>Ingresos por período</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px] flex items-center justify-center bg-muted/50 rounded-lg">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Gráfica de ventas mensuales</p>
-                <p className="text-xs text-muted-foreground">Se implementará con Recharts</p>
-              </div>
-            </div>
+            {historicas.length > 0 ? (
+              <MonthlySalesBarChart data={historicas} />
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">Sin datos históricos</p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Productos</CardTitle>
-            <CardDescription>Productos más vendidos este mes</CardDescription>
+            <CardTitle>Distribución de Ventas</CardTitle>
+            <CardDescription>Por estado de la transacción</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {topProducts.map((product, index) => (
-                <div key={product.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">{product.sales} ventas</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">€{product.revenue.toFixed(2)}</p>
-                    <div className="flex items-center justify-end gap-1">
-                      {product.growth > 0 ? (
-                        <TrendingUp className="h-3 w-3 text-success" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3 text-destructive" />
-                      )}
-                      <span className={`text-xs ${product.growth > 0 ? "text-success" : "text-destructive"}`}>
-                        {product.growth > 0 ? "+" : ""}{product.growth}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {pieData.length > 0 ? (
+              <SalesPieChart data={pieData} />
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">Sin datos disponibles</p>
+            )}
           </CardContent>
         </Card>
       </div>

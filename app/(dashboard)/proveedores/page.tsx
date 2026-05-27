@@ -1,27 +1,89 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Phone, Mail, MapPin, Plus, Truck } from "lucide-react";
+import { Phone, Mail, Plus, Truck, Pencil, Trash2 } from "lucide-react";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { ProveedorModal } from "@/components/modals/ProveedorModal";
 
-const suppliers = [
-  { id: 1, name: "TechCorp Internacional", contact: "Carlos Martínez", email: "carlos@techcorp.com", phone: "+34 612 345 678", products: 45, status: "active" },
-  { id: 2, name: "Suministros García", contact: "María García", email: "maria@sgarcia.es", phone: "+34 623 456 789", products: 28, status: "active" },
-  { id: 3, name: "ElectroImport S.L.", contact: "Juan Pérez", email: "juan@electroimport.com", phone: "+34 634 567 890", products: 67, status: "inactive" },
-  { id: 4, name: "Componentes López", contact: "Ana López", email: "ana@clopez.es", phone: "+34 645 678 901", products: 15, status: "active" },
-];
+interface Proveedor {
+  id: number;
+  nombre: string;
+  contacto?: string;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
+  estado: string;
+}
+
+interface ApiResponse {
+  proveedores: Proveedor[];
+}
 
 export default function ProveedoresPage() {
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editProveedor, setEditProveedor] = useState<Proveedor | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const fetchProveedores = () => {
+    setLoading(true);
+    api
+      .getProveedores()
+      .then((r) => setProveedores((r as ApiResponse).proveedores ?? []))
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchProveedores(); }, []);
+
+  const activos = proveedores.filter((p) => p.estado === "activo").length;
+
+  const handleEdit = (p: Proveedor) => {
+    setEditProveedor(p);
+    setModalOpen(true);
+  };
+
+  const handleNew = () => {
+    setEditProveedor(null);
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("¿Eliminar este proveedor?")) return;
+    setDeletingId(id);
+    try {
+      await api.eliminarProveedor(id);
+      fetchProveedores();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Error al eliminar");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  if (loading) return <LoadingSpinner text="Cargando proveedores..." />;
+  if (error)
+    return (
+      <p className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-md">
+        Error: {error}
+      </p>
+    );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Proveedores</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestión de proveedores y asociación de productos
-          </p>
+          <p className="text-muted-foreground mt-1">Gestión de proveedores y asociación de productos</p>
         </div>
-        <Button>
+        <Button onClick={handleNew}>
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Proveedor
         </Button>
@@ -33,7 +95,7 @@ export default function ProveedoresPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Proveedores</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{proveedores.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -41,63 +103,97 @@ export default function ProveedoresPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Activos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">18</div>
+            <div className="text-2xl font-bold text-success">{activos}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Productos Vinculados</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Inactivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">312</div>
+            <div className="text-2xl font-bold text-muted-foreground">{proveedores.length - activos}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {suppliers.map((supplier) => (
-          <Card key={supplier.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                      {supplier.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                    <CardDescription>{supplier.contact}</CardDescription>
+      {proveedores.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No hay proveedores registrados
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {proveedores.map((supplier) => (
+            <Card key={supplier.id}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                        {supplier.nombre.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-lg">{supplier.nombre}</CardTitle>
+                      {supplier.contacto && (
+                        <CardDescription>{supplier.contacto}</CardDescription>
+                      )}
+                    </div>
                   </div>
+                  <Badge variant={supplier.estado === "activo" ? "default" : "secondary"}>
+                    {supplier.estado === "activo" ? "Activo" : "Inactivo"}
+                  </Badge>
                 </div>
-                <Badge variant={supplier.status === "active" ? "default" : "secondary"}>
-                  {supplier.status === "active" ? "Activo" : "Inactivo"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{supplier.email}</span>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {supplier.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{supplier.email}</span>
+                    </div>
+                  )}
+                  {supplier.telefono && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{supplier.telefono}</span>
+                    </div>
+                  )}
+                  {supplier.direccion && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      <span>{supplier.direccion}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{supplier.phone}</span>
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(supplier)}>
+                    <Pencil className="mr-1 h-3.5 w-3.5" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDelete(supplier.id)}
+                    disabled={deletingId === supplier.id}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Truck className="h-4 w-4 text-muted-foreground" />
-                  <span>{supplier.products} productos vinculados</span>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1">Ver Productos</Button>
-                <Button size="sm" className="flex-1">Editar</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <ProveedorModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSaved={fetchProveedores}
+        proveedor={editProveedor}
+      />
     </div>
   );
 }
