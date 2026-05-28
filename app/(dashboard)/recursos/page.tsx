@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Wrench, Calendar, ClipboardList, ArrowRight } from "lucide-react";
@@ -38,6 +41,12 @@ const resourceTypes = [
 ];
 
 export default function RecursosPage() {
+  const router = useRouter();
+
+  const handleNavigate = (tipo: string) => {
+    router.push(`/recursos/${tipo}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -54,7 +63,11 @@ export default function RecursosPage() {
         {resourceTypes.map((type) => {
           const Icon = type.icon;
           return (
-            <Card key={type.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card
+              key={type.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handleNavigate(type.id)}
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -66,7 +79,14 @@ export default function RecursosPage() {
                       <CardDescription>{type.count} registrados</CardDescription>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNavigate(type.id);
+                    }}
+                  >
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </div>

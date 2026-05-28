@@ -111,6 +111,46 @@ export const api = {
     apiFetch(`/ventas/${id}`, { method: "DELETE" }),
   getEstadisticasVentas: () => apiFetch("/ventas/estadisticas/resumen"),
 
+  // Servicios
+  getServicios: () => apiFetch("/servicios"),
+  getServicio: (id: number) => apiFetch(`/servicios/${id}`),
+  crearServicio: (data: Record<string, unknown>) =>
+    apiFetch("/servicios", { method: "POST", body: data }),
+  actualizarServicio: (id: number, data: Record<string, unknown>) =>
+    apiFetch(`/servicios/${id}`, { method: "PUT", body: data }),
+  eliminarServicio: (id: number) =>
+    apiFetch(`/servicios/${id}`, { method: "DELETE" }),
+
+  // Reservas
+  getReservas: () => apiFetch("/reservas"),
+  getReserva: (id: number) => apiFetch(`/reservas/${id}`),
+  crearReserva: (data: Record<string, unknown>) =>
+    apiFetch("/reservas", { method: "POST", body: data }),
+  actualizarReserva: (id: number, data: Record<string, unknown>) =>
+    apiFetch(`/reservas/${id}`, { method: "PUT", body: data }),
+  eliminarReserva: (id: number) =>
+    apiFetch(`/reservas/${id}`, { method: "DELETE" }),
+
+  // Encargos
+  getEncargos: () => apiFetch("/encargos"),
+  getEncargo: (id: number) => apiFetch(`/encargos/${id}`),
+  crearEncargo: (data: Record<string, unknown>) =>
+    apiFetch("/encargos", { method: "POST", body: data }),
+  actualizarEncargo: (id: number, data: Record<string, unknown>) =>
+    apiFetch(`/encargos/${id}`, { method: "PUT", body: data }),
+  eliminarEncargo: (id: number) =>
+    apiFetch(`/encargos/${id}`, { method: "DELETE" }),
+
+  // Suscripciones
+  getSuscripciones: () => apiFetch("/suscripciones"),
+  getSuscripcion: (id: number) => apiFetch(`/suscripciones/${id}`),
+  crearSuscripcion: (data: Record<string, unknown>) =>
+    apiFetch("/suscripciones", { method: "POST", body: data }),
+  actualizarSuscripcion: (id: number, data: Record<string, unknown>) =>
+    apiFetch(`/suscripciones/${id}`, { method: "PUT", body: data }),
+  eliminarSuscripcion: (id: number) =>
+    apiFetch(`/suscripciones/${id}`, { method: "DELETE" }),
+
   // Health check
   health: () => apiFetch("/health"),
 };

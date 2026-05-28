@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,6 +10,13 @@ import { Switch } from "@/components/ui/switch";
 import { Building2, User, Bell, Shield, Palette } from "lucide-react";
 
 export default function ConfiguracionPage() {
+  const [notifications, setNotifications] = useState({
+    stockAlerts: true,
+    dailySummary: true,
+    aiInsights: false,
+    twoFactor: false,
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -94,7 +104,12 @@ export default function ConfiguracionPage() {
                     Recibe notificaciones cuando el stock esté por debajo del mínimo
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={notifications.stockAlerts}
+                  onCheckedChange={(checked) =>
+                    setNotifications({ ...notifications, stockAlerts: checked })
+                  }
+                />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -104,7 +119,12 @@ export default function ConfiguracionPage() {
                     Recibe un resumen de ventas cada día
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={notifications.dailySummary}
+                  onCheckedChange={(checked) =>
+                    setNotifications({ ...notifications, dailySummary: checked })
+                  }
+                />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -114,7 +134,12 @@ export default function ConfiguracionPage() {
                     Notificaciones de recomendaciones inteligentes
                   </p>
                 </div>
-                <Switch />
+                <Switch
+                  checked={notifications.aiInsights}
+                  onCheckedChange={(checked) =>
+                    setNotifications({ ...notifications, aiInsights: checked })
+                  }
+                />
               </div>
             </CardContent>
           </Card>
@@ -142,7 +167,12 @@ export default function ConfiguracionPage() {
                     Añade una capa extra de seguridad
                   </p>
                 </div>
-                <Switch />
+                <Switch
+                  checked={notifications.twoFactor}
+                  onCheckedChange={(checked) =>
+                    setNotifications({ ...notifications, twoFactor: checked })
+                  }
+                />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
