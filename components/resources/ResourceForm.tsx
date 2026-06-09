@@ -46,7 +46,9 @@ export function ResourceForm({
   useEffect(() => {
     if (open) {
       if (item) {
-        setForm({ ...item } as Record<string, unknown>);
+        // Filtrar campos de sistema antes de cargar el formulario
+        const { id, created_at, updated_at, ...editable } = item as Record<string, unknown>;
+        setForm(editable);
       } else {
         setForm({});
       }
@@ -58,11 +60,34 @@ export function ResourceForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Convertir datetime-local (2024-01-15T14:30) a formato MySQL (2024-01-15 14:30:00)
+  const formatDateTimeForAPI = (value: unknown): string | null => {
+    if (!value || typeof value !== "string") return null;
+    // Si ya tiene espacio en lugar de T, asumir que está formateado
+    if (value.includes(" ")) return value;
+    // Reemplazar T por espacio y añadir segundos si no los tiene
+    const formatted = value.replace("T", " ");
+    // Si no tiene segundos, añadir :00
+    return formatted.length <= 16 ? `${formatted}:00` : formatted;
+  };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
       setError("");
-      await onSave(form);
+
+      // Preparar datos con fechas formateadas (Reservas y Suscripciones)
+      const preparedData: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(form)) {
+        if (key === "fecha_inicio" || key === "fecha_fin" || key === "fecha_proximo_pago" || key === "fecha") {
+          const formatted = formatDateTimeForAPI(value);
+          if (formatted) preparedData[key] = formatted;
+        } else {
+          preparedData[key] = value;
+        }
+      }
+
+      await onSave(preparedData);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar");
@@ -111,6 +136,7 @@ export function ResourceForm({
           { name: "email", label: "Email", type: "email", required: true },
           { name: "telefono", label: "Teléfono", type: "text", required: true },
           { name: "precio", label: "Precio", type: "number" },
+          { name: "fecha", label: "Fecha", type: "datetime-local" },
           { name: "descripcion", label: "Descripción", type: "textarea" },
           { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
         ];
@@ -169,6 +195,24 @@ export function ResourceForm({
                     </option>
                   ))}
                 </select>
+              ) : field.name === "precio" ? (
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                  <Input
+                    id={field.name}
+                    type={field.type}
+                    value={(form[field.name] as string | number) || ""}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleChange(
+                        field.name,
+                        field.type === "number" ? Number(e.target.value) : e.target.value
+                      )
+                    }
+                    placeholder="0,00"
+                    required={field.required}
+                    className="pl-7"
+                  />
+                </div>
               ) : (
                 <Input
                   id={field.name}

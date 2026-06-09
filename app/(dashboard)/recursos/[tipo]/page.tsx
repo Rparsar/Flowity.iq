@@ -8,6 +8,14 @@ import { ResourceTable } from "@/components/resources/ResourceTable";
 import { ResourceForm } from "@/components/resources/ResourceForm";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
+// Mapeo explícito de tipos a keys de respuesta API
+const RESPONSE_KEY: Record<RecursoTipo, string> = {
+  producto: "productos",
+  servicio: "servicios",
+  reserva: "reservas",
+  encargo: "encargos",
+};
+
 export default function RecursoPage() {
   const params = useParams();
   const tipo = (params?.tipo as RecursoTipo) || "producto";
@@ -39,7 +47,7 @@ export default function RecursoPage() {
           response = await api.getProductos();
       }
 
-      const key = `${tipo}s`;
+      const key = RESPONSE_KEY[tipo];
       setDatos((response as Record<string, Recurso[]>)[key] || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar datos");

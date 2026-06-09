@@ -14,6 +14,11 @@ import {
 import { Edit2, Trash2, Plus } from "lucide-react";
 import { RecursoTipo, Recurso } from "@/lib/types";
 
+interface Column {
+  key: string;
+  label: string;
+}
+
 interface ResourceTableProps {
   tipo: RecursoTipo;
   datos: Recurso[];
@@ -37,18 +42,43 @@ export function ResourceTable({
     item.nombre.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getColumns = () => {
+  const getColumns = (): Column[] => {
     switch (tipo) {
       case "producto":
-        return ["nombre", "sku", "categoria", "precio", "stock"];
+        return [
+          { key: "nombre", label: "Nombre" },
+          { key: "sku", label: "SKU" },
+          { key: "categoria", label: "Categoría" },
+          { key: "precio", label: "Precio" },
+          { key: "stock", label: "Stock" },
+        ];
       case "servicio":
-        return ["nombre", "descripcion", "precio"];
+        return [
+          { key: "nombre", label: "Nombre" },
+          { key: "descripcion", label: "Descripción" },
+          { key: "precio", label: "Precio" },
+        ];
       case "reserva":
-        return ["nombre", "cliente", "email", "precio", "fecha_inicio"];
+        return [
+          { key: "nombre", label: "Nombre" },
+          { key: "cliente", label: "Cliente" },
+          { key: "email", label: "Email" },
+          { key: "precio", label: "Precio" },
+          { key: "fecha_inicio", label: "Fecha Inicio" },
+        ];
       case "encargo":
-        return ["nombre", "cliente", "email", "precio"];
+        return [
+          { key: "nombre", label: "Nombre" },
+          { key: "cliente", label: "Cliente" },
+          { key: "email", label: "Email" },
+          { key: "precio", label: "Precio" },
+          { key: "fecha", label: "Fecha" },
+        ];
       default:
-        return ["nombre", "precio"];
+        return [
+          { key: "nombre", label: "Nombre" },
+          { key: "precio", label: "Precio" },
+        ];
     }
   };
 
@@ -78,8 +108,8 @@ export function ResourceTable({
           <TableHeader>
             <TableRow>
               {columns.map((col) => (
-                <TableHead key={col} className="capitalize">
-                  {col}
+                <TableHead key={col.key}>
+                  {col.label}
                 </TableHead>
               ))}
               <TableHead className="text-right">Acciones</TableHead>
@@ -98,13 +128,28 @@ export function ResourceTable({
             ) : (
               filtrados.map((item) => (
                 <TableRow key={item.id}>
-                  {columns.map((col) => (
-                    <TableCell key={col}>
-                      {String(
-                        item[col as keyof Recurso] || "-"
-                      ).substring(0, 50)}
-                    </TableCell>
-                  ))}
+                  {columns.map((col) => {
+                    const value = item[col.key as keyof Recurso];
+                    let displayValue: string;
+                    if (col.key === "precio") {
+                      const numValue = typeof value === "number" ? value : Number(value);
+                      if (!isNaN(numValue)) {
+                        displayValue = numValue.toLocaleString("es-ES", {
+                          style: "currency",
+                          currency: "EUR",
+                        });
+                      } else {
+                        displayValue = String(value ?? "-");
+                      }
+                    } else {
+                      displayValue = String(value ?? "-").substring(0, 50);
+                    }
+                    return (
+                      <TableCell key={col.key}>
+                        {displayValue}
+                      </TableCell>
+                    );
+                  })}
                   <TableCell className="text-right space-x-2">
                     <Button
                       variant="ghost"

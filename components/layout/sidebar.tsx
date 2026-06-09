@@ -20,6 +20,11 @@ import {
   Menu,
   ChevronRight,
   Boxes,
+  ChevronDown,
+  Plus,
+  Wrench,
+  Calendar,
+  ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,12 +32,22 @@ interface SidebarProps {
   className?: string;
 }
 
-const navigation = [
+const mainNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Inventario", href: "/inventario", icon: Package },
   { name: "Proveedores", href: "/proveedores", icon: Truck },
   { name: "Ventas", href: "/ventas", icon: ShoppingCart },
-  { name: "Recursos", href: "/recursos", icon: Boxes },
+];
+
+const resourceSubItems = [
+  { name: "Todos los recursos", href: "/recursos", icon: Boxes },
+  { name: "Productos", href: "/recursos/producto", icon: Package },
+  { name: "Servicios", href: "/recursos/servicio", icon: Wrench },
+  { name: "Reservas", href: "/recursos/reserva", icon: Calendar },
+  { name: "Encargos", href: "/recursos/encargo", icon: ClipboardList },
+  { name: "Nuevo recurso", href: "#", icon: Plus },
+];
+
+const otherNavigation = [
   { name: "Inteligencia IA", href: "/ia", icon: Brain },
   { name: "Asistente", href: "/chat", icon: MessageSquare },
 ];
@@ -45,6 +60,9 @@ const bottomNavigation = [
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [resourcesOpen, setResourcesOpen] = React.useState(
+    pathname?.startsWith("/recursos") ?? false
+  );
 
   const initials = user?.name
     ? user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -64,7 +82,80 @@ export function Sidebar({ className }: SidebarProps) {
 
         <ScrollArea className="flex-1 py-4">
           <nav className="px-3 space-y-1">
-            {navigation.map((item) => {
+            {/* Main navigation */}
+            {mainNavigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+              
+              return (
+                <Link key={item.name} href={item.href}>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.name}</span>
+                    {isActive && <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                </Link>
+              );
+            })}
+
+            {/* Recursos expandable menu */}
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                onClick={() => setResourcesOpen(!resourcesOpen)}
+                className={cn(
+                  "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-colors",
+                  pathname?.startsWith("/recursos")
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Boxes className="h-4 w-4 shrink-0" />
+                <span className="flex-1">Recursos</span>
+                {resourcesOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </Button>
+              
+              {resourcesOpen && (
+                <div className="ml-4 pl-3 border-l border-sidebar-border space-y-1">
+                  {resourceSubItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    
+                    return (
+                      <Link key={item.name} href={item.href}>
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "w-full justify-start gap-3 h-9 px-3 text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-sidebar-primary/70 text-sidebar-primary-foreground hover:bg-sidebar-primary/80"
+                              : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="flex-1">{item.name}</span>
+                        </Button>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Other navigation */}
+            {otherNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
               
@@ -134,6 +225,9 @@ export function Sidebar({ className }: SidebarProps) {
 export function MobileSidebar() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const [resourcesOpen, setResourcesOpen] = React.useState(
+    pathname?.startsWith("/recursos") ?? false
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -158,7 +252,79 @@ export function MobileSidebar() {
 
           <ScrollArea className="flex-1 py-4">
             <nav className="px-3 space-y-1">
-              {navigation.map((item) => {
+              {/* Main navigation */}
+              {mainNavigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                
+                return (
+                  <Link key={item.name} href={item.href} onClick={() => setOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1">{item.name}</span>
+                    </Button>
+                  </Link>
+                );
+              })}
+
+              {/* Recursos expandable menu */}
+              <div className="space-y-1">
+                <Button
+                  variant="ghost"
+                  onClick={() => setResourcesOpen(!resourcesOpen)}
+                  className={cn(
+                    "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-colors",
+                    pathname?.startsWith("/recursos")
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  )}
+                >
+                  <Boxes className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">Recursos</span>
+                  {resourcesOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                {resourcesOpen && (
+                  <div className="ml-4 pl-3 border-l border-sidebar-border space-y-1">
+                    {resourceSubItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname === item.href;
+                      
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setOpen(false)}>
+                          <Button
+                            variant="ghost"
+                            className={cn(
+                              "w-full justify-start gap-3 h-9 px-3 text-sm font-medium transition-colors",
+                              isActive
+                                ? "bg-sidebar-primary/70 text-sidebar-primary-foreground hover:bg-sidebar-primary/80"
+                                : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            )}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="flex-1">{item.name}</span>
+                          </Button>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Other navigation */}
+              {otherNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
                 

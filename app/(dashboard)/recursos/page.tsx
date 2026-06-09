@@ -1,17 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Wrench, Calendar, ClipboardList, ArrowRight } from "lucide-react";
+import { Package, Wrench, Calendar, ClipboardList, ArrowRight, Loader2 } from "lucide-react";
 
-const resourceTypes = [
+const resourceTypesBase = [
   {
     id: "producto",
     name: "Productos",
     description: "Gestión de productos físicos para tiendas y comercios",
     icon: Package,
-    count: 847,
     color: "bg-blue-500",
   },
   {
@@ -19,7 +20,6 @@ const resourceTypes = [
     name: "Servicios",
     description: "Servicios ofrecidos: consultoría, reparaciones, etc.",
     icon: Wrench,
-    count: 24,
     color: "bg-purple-500",
   },
   {
@@ -27,7 +27,6 @@ const resourceTypes = [
     name: "Reservas",
     description: "Sistema de citas y reservas para clínicas, salones...",
     icon: Calendar,
-    count: 156,
     color: "bg-emerald-500",
   },
   {
@@ -35,13 +34,39 @@ const resourceTypes = [
     name: "Encargos",
     description: "Pedidos personalizados y trabajos por encargo",
     icon: ClipboardList,
-    count: 42,
     color: "bg-amber-500",
   },
 ];
 
 export default function RecursosPage() {
   const router = useRouter();
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        setLoading(true);
+        const [productos, servicios, reservas, encargos] = await Promise.all([
+          api.getProductos(),
+          api.getServicios(),
+          api.getReservas(),
+          api.getEncargos(),
+        ]);
+        setCounts({
+          producto: (productos as { total?: number }).total ?? 0,
+          servicio: (servicios as { total?: number }).total ?? 0,
+          reserva: (reservas as { total?: number }).total ?? 0,
+          encargo: (encargos as { total?: number }).total ?? 0,
+        });
+      } catch {
+        setCounts({ producto: 0, servicio: 0, reserva: 0, encargo: 0 });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCounts();
+  }, []);
 
   const handleNavigate = (tipo: string) => {
     router.push(`/recursos/${tipo}`);
@@ -60,7 +85,7 @@ export default function RecursosPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {resourceTypes.map((type) => {
+        {resourceTypesBase.map((type) => {
           const Icon = type.icon;
           return (
             <Card
@@ -76,7 +101,16 @@ export default function RecursosPage() {
                     </div>
                     <div>
                       <CardTitle className="text-xl">{type.name}</CardTitle>
-                      <CardDescription>{type.count} registrados</CardDescription>
+                      <CardDescription>
+                        {loading ? (
+                          <span className="flex items-center gap-1">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Cargando...
+                          </span>
+                        ) : (
+                          `${counts[type.id] ?? 0} registrados`
+                        )}
+                      </CardDescription>
                     </div>
                   </div>
                   <Button

@@ -33,6 +33,7 @@ export interface Encargo extends RecursoBase {
   cliente: string;
   email: string;
   telefono: string;
+  fecha?: string;
 }
 
 export interface Suscripcion {

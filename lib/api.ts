@@ -91,8 +91,6 @@ export const api = {
   // Proveedores
   getProveedores: () => apiFetch("/proveedores"),
   getProveedor: (id: number) => apiFetch(`/proveedores/${id}`),
-
-  // Proveedores (CRUD completo)
   crearProveedor: (data: Record<string, unknown>) =>
     apiFetch("/proveedores", { method: "POST", body: data }),
   actualizarProveedor: (id: number, data: Record<string, unknown>) =>
