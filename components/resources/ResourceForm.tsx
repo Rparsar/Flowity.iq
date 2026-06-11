@@ -161,14 +161,19 @@ export function ResourceForm({
 
         <div className="space-y-4">
           {error && (
-            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">
-              {error}
-            </p>
+            <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded space-y-1">
+              {error.split("\n").map((msg, i) => (
+                <p key={i}>• {msg}</p>
+              ))}
+            </div>
           )}
 
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
-              <Label htmlFor={field.name}>{field.label}</Label>
+              <Label htmlFor={field.name}>
+                {field.label}
+                {field.required && <span className="text-destructive ml-1">*</span>}
+              </Label>
               {field.type === "textarea" ? (
                 <Textarea
                   id={field.name}
@@ -200,19 +205,39 @@ export function ResourceForm({
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
                   <Input
                     id={field.name}
-                    type={field.type}
+                    type="text"
                     value={(form[field.name] as string | number) || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleChange(
-                        field.name,
-                        field.type === "number" ? Number(e.target.value) : e.target.value
-                      )
-                    }
-                    placeholder="0,00"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const valor = e.target.value.replace(/[^0-9.]/g, "");
+                      const partes = valor.split(".");
+                      const limpio = partes.length > 2 ? partes[0] + "." + partes.slice(1).join("") : valor;
+                      handleChange(field.name, limpio === "" ? "" : Number(limpio));
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      const permitidos = /[0-9.]|Backspace|Delete|Tab/;
+                      if (!permitidos.test(e.key)) e.preventDefault();
+                    }}
+                    placeholder="0.00"
                     required={field.required}
                     className="pl-7"
                   />
                 </div>
+              ) : field.name === "telefono" ? (
+                <Input
+                  id={field.name}
+                  type="tel"
+                  value={(form[field.name] as string | number) || ""}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const valor = e.target.value.replace(/[^0-9+\-() ]/g, "");
+                    handleChange(field.name, valor);
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    const permitidos = /[0-9+\-() ]|Backspace|Delete|Tab/;
+                    if (!permitidos.test(e.key)) e.preventDefault();
+                  }}
+                  placeholder={field.label}
+                  required={field.required}
+                />
               ) : (
                 <Input
                   id={field.name}

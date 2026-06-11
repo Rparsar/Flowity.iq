@@ -51,6 +51,12 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    if (error.errors && typeof error.errors === "object") {
+      const mensajes = Object.values(error.errors as Record<string, string[]>)
+        .flat()
+        .join("\n");
+      throw new Error(mensajes);
+    }
     throw new Error(error.message || `Error ${response.status}: ${response.statusText}`);
   }
 
