@@ -22,18 +22,13 @@ export interface Producto extends RecursoBase {
 export interface Servicio extends RecursoBase {}
 
 export interface Reserva extends RecursoBase {
-  cliente: string;
-  email: string;
-  telefono: string;
   fecha_inicio?: string;
   fecha_fin?: string;
 }
 
 export interface Encargo extends RecursoBase {
-  cliente: string;
-  email: string;
-  telefono: string;
-  fecha?: string;
+  producto_id?: number;
+  dia_semana?: 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
 }
 
 export interface Suscripcion {

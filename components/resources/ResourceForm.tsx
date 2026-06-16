@@ -14,14 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
-import { RecursoTipo, Recurso } from "@/lib/types";
+import { RecursoTipo, Recurso, Producto } from "@/lib/types";
+import { api } from "@/lib/api";
 
 interface Field {
   name: string;
   label: string;
   type: string;
   required?: boolean;
-  options?: string[];
+  options?: string[] | { id: number; nombre: string }[];
 }
 
 interface ResourceFormProps {
@@ -42,6 +43,7 @@ export function ResourceForm({
   const [form, setForm] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [productos, setProductos] = useState<Producto[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -53,11 +55,37 @@ export function ResourceForm({
         setForm({});
       }
       setError("");
+
+      // Cargar productos si es un encargo
+      if (tipo === "encargo") {
+        loadProductos();
+      }
     }
-  }, [open, item]);
+  }, [open, item, tipo]);
+
+  const loadProductos = async () => {
+    try {
+      const response = await api.getProductos() as { productos: Producto[] };
+      setProductos(response.productos || []);
+    } catch (err) {
+      console.error("Error cargando productos:", err);
+    }
+  };
 
   const handleChange = (field: string, value: unknown) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // Al seleccionar un producto en encargo, rellenar el precio automáticamente
+      if (field === "producto_id" && value) {
+        const productoSeleccionado = productos.find((p) => p.id === Number(value));
+        if (productoSeleccionado) {
+          updated.precio = String(productoSeleccionado.precio);
+        }
+      }
+
+      return updated;
+    });
   };
 
   // Convertir datetime-local (2024-01-15T14:30) a formato MySQL (2024-01-15 14:30:00)
@@ -124,6 +152,8 @@ export function ResourceForm({
           { name: "descripcion", label: "Descripción", type: "textarea" },
           { name: "precio", label: "Precio", type: "number" },
           { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
+          { name: "fecha_inicio", label: "Fecha Inicio", type: "datetime-local" },
+          { name: "fecha_fin", label: "Fecha Fin", type: "datetime-local" },
         ];
       case "encargo":
         return [
@@ -131,6 +161,8 @@ export function ResourceForm({
           { name: "descripcion", label: "Descripción", type: "textarea" },
           { name: "precio", label: "Precio", type: "number" },
           { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
+          { name: "producto_id", label: "Producto", type: "select", options: productos },
+          { name: "dia_semana", label: "Día de la Semana", type: "select", options: ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"] },
         ];
       default:
         return baseFields;
@@ -178,19 +210,29 @@ export function ResourceForm({
               ) : field.type === "select" ? (
                 <select
                   id={field.name}
-                  value={(form[field.name] as string) || ""}
+                  value={(form[field.name] as string | number) || ""}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    handleChange(field.name, e.target.value)
+                    handleChange(field.name, field.name === "producto_id" ? Number(e.target.value) : e.target.value)
                   }
                   className="w-full px-3 py-2 border rounded-md"
                   aria-label={field.label}
                 >
                   <option value="">Seleccionar...</option>
-                  {field.options?.map((opt: string) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
+                  {field.options?.map((opt) => {
+                    if (typeof opt === "string") {
+                      return (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      );
+                    } else {
+                      return (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.nombre}
+                        </option>
+                      );
+                    }
+                  })}
                 </select>
               ) : field.name === "precio" ? (
                 <div className="relative">
@@ -200,14 +242,28 @@ export function ResourceForm({
                     type="text"
                     value={(form[field.name] as string | number) || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const valor = e.target.value.replace(/[^0-9.]/g, "");
+                      let valor = e.target.value.replace(/[^0-9.]/g, "");
                       const partes = valor.split(".");
-                      const limpio = partes.length > 2 ? partes[0] + "." + partes.slice(1).join("") : valor;
-                      handleChange(field.name, limpio === "" ? "" : Number(limpio));
+                      
+                      // Permitir solo un punto decimal
+                      if (partes.length > 2) {
+                        valor = partes[0] + "." + partes.slice(1).join("");
+                      }
+                      
+                      // Limitar a 2 decimales
+                      if (partes.length === 2 && partes[1].length > 2) {
+                        valor = partes[0] + "." + partes[1].substring(0, 2);
+                      }
+                      
+                      // Guardar como string para no perder el punto decimal mientras se escribe
+                      handleChange(field.name, valor);
                     }}
                     onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                      const permitidos = /[0-9.]|Backspace|Delete|Tab/;
-                      if (!permitidos.test(e.key)) e.preventDefault();
+                      // Permitir: números, punto, Backspace, Delete, Tab, flechas, Ctrl+C, Ctrl+V, Ctrl+X
+                      const permitidos = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', 'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                      if (!permitidos.includes(e.key) && !(e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase()))) {
+                        e.preventDefault();
+                      }
                     }}
                     placeholder="0.00"
                     required={field.required}

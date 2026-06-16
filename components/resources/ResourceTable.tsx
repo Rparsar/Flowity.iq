@@ -63,12 +63,16 @@ export function ResourceTable({
           { key: "nombre", label: "Nombre" },
           { key: "descripcion", label: "Descripción" },
           { key: "precio", label: "Precio" },
+          { key: "fecha_inicio", label: "Fecha Inicio" },
+          { key: "fecha_fin", label: "Fecha Fin" },
         ];
       case "encargo":
         return [
           { key: "nombre", label: "Nombre" },
           { key: "descripcion", label: "Descripción" },
           { key: "precio", label: "Precio" },
+          { key: "producto_id", label: "Producto ID" },
+          { key: "dia_semana", label: "Día Semana" },
         ];
       default:
         return [
