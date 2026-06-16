@@ -61,18 +61,14 @@ export function ResourceTable({
       case "reserva":
         return [
           { key: "nombre", label: "Nombre" },
-          { key: "cliente", label: "Cliente" },
-          { key: "email", label: "Email" },
+          { key: "descripcion", label: "Descripción" },
           { key: "precio", label: "Precio" },
-          { key: "fecha_inicio", label: "Fecha Inicio" },
         ];
       case "encargo":
         return [
           { key: "nombre", label: "Nombre" },
-          { key: "cliente", label: "Cliente" },
-          { key: "email", label: "Email" },
+          { key: "descripcion", label: "Descripción" },
           { key: "precio", label: "Precio" },
-          { key: "fecha", label: "Fecha" },
         ];
       default:
         return [

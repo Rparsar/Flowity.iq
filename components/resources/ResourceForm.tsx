@@ -121,23 +121,15 @@ export function ResourceForm({
       case "reserva":
         return [
           { name: "nombre", label: "Nombre", type: "text", required: true },
-          { name: "cliente", label: "Cliente", type: "text", required: true },
-          { name: "email", label: "Email", type: "email", required: true },
-          { name: "telefono", label: "Teléfono", type: "text", required: true },
+          { name: "descripcion", label: "Descripción", type: "textarea" },
           { name: "precio", label: "Precio", type: "number" },
-          { name: "fecha_inicio", label: "Fecha Inicio", type: "datetime-local" },
-          { name: "fecha_fin", label: "Fecha Fin", type: "datetime-local" },
           { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
         ];
       case "encargo":
         return [
           { name: "nombre", label: "Nombre", type: "text", required: true },
-          { name: "cliente", label: "Cliente", type: "text", required: true },
-          { name: "email", label: "Email", type: "email", required: true },
-          { name: "telefono", label: "Teléfono", type: "text", required: true },
-          { name: "precio", label: "Precio", type: "number" },
-          { name: "fecha", label: "Fecha", type: "datetime-local" },
           { name: "descripcion", label: "Descripción", type: "textarea" },
+          { name: "precio", label: "Precio", type: "number" },
           { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
         ];
       default:
