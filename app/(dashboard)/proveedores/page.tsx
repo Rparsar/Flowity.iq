@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Phone, Mail, Plus, Truck, Pencil, Trash2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ProveedorModal } from "@/components/modals/ProveedorModal";
+import { ProveedorDetailModal } from "@/components/modals/ProveedorDetailModal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 
 interface Proveedor {
@@ -31,6 +32,8 @@ export default function ProveedoresPage() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editProveedor, setEditProveedor] = useState<Proveedor | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedProveedor, setSelectedProveedor] = useState<Proveedor | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Proveedor | null>(null);
@@ -47,6 +50,11 @@ export default function ProveedoresPage() {
   useEffect(() => { fetchProveedores(); }, []);
 
   const activos = proveedores.filter((p) => p.estado === "activo").length;
+
+  const handleDetail = (p: Proveedor) => {
+    setSelectedProveedor(p);
+    setDetailModalOpen(true);
+  };
 
   const handleEdit = (p: Proveedor) => {
     setEditProveedor(p);
@@ -136,7 +144,11 @@ export default function ProveedoresPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {proveedores.map((supplier) => (
-            <Card key={supplier.id}>
+            <Card
+              key={supplier.id}
+              className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+              onClick={() => handleDetail(supplier)}
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -179,7 +191,15 @@ export default function ProveedoresPage() {
                   )}
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(supplier)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(supplier);
+                    }}
+                  >
                     <Pencil className="mr-1 h-3.5 w-3.5" />
                     Editar
                   </Button>
@@ -187,7 +207,10 @@ export default function ProveedoresPage() {
                     variant="outline"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(supplier)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(supplier);
+                    }}
                     disabled={deletingId === supplier.id}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -204,6 +227,12 @@ export default function ProveedoresPage() {
         onClose={() => setModalOpen(false)}
         onSaved={fetchProveedores}
         proveedor={editProveedor}
+      />
+
+      <ProveedorDetailModal
+        open={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        proveedorId={selectedProveedor?.id ?? null}
       />
 
       <DeleteConfirmModal

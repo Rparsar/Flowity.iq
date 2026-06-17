@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { RecursoTipo, Recurso } from "@/lib/types";
 import { ResourceTable } from "@/components/resources/ResourceTable";
 import { ResourceForm } from "@/components/resources/ResourceForm";
+import { DetailModal } from "@/components/modals/DetailModal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
@@ -28,6 +29,8 @@ export default function RecursoPage() {
   const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Recurso | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedDetailId, setSelectedDetailId] = useState<number | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Recurso | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -75,6 +78,11 @@ export default function RecursoPage() {
   useEffect(() => {
     cargarDatos();
   }, [tipo, editId]);
+
+  const handleDetail = (item: Recurso) => {
+    setSelectedDetailId(item.id);
+    setDetailModalOpen(true);
+  };
 
   const handleEdit = (item: Recurso) => {
     setSelectedItem(item);
@@ -182,6 +190,7 @@ export default function RecursoPage() {
         tipo={tipo}
         datos={datos}
         loading={loading}
+        onDetail={handleDetail}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onNew={handleNew}
@@ -196,6 +205,13 @@ export default function RecursoPage() {
         }}
         onSave={handleSave}
         item={selectedItem}
+      />
+
+      <DetailModal
+        open={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        tipo={tipo}
+        itemId={selectedDetailId}
       />
 
       <DeleteConfirmModal

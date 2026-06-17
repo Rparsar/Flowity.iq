@@ -23,6 +23,7 @@ interface ResourceTableProps {
   tipo: RecursoTipo;
   datos: Recurso[];
   loading: boolean;
+  onDetail: (item: Recurso) => void;
   onEdit: (item: Recurso) => void;
   onDelete: (item: Recurso) => void;
   onNew: () => void;
@@ -32,6 +33,7 @@ export function ResourceTable({
   tipo,
   datos,
   loading,
+  onDetail,
   onEdit,
   onDelete,
   onNew,
@@ -81,7 +83,7 @@ export function ResourceTable({
           { key: "nombre", label: "Nombre" },
           { key: "descripcion", label: "Descripción" },
           { key: "precio", label: "Precio" },
-          { key: "producto_id", label: "Producto ID" },
+          { key: "producto", label: "Producto" },
           { key: "dia_semana", label: "Día Semana" },
         ];
       default:
@@ -137,7 +139,11 @@ export function ResourceTable({
               </TableRow>
             ) : (
               paginatedDatos.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow
+                  key={item.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => onDetail(item)}
+                >
                   {columns.map((col) => {
                     const value = item[col.key as keyof Recurso];
                     let displayValue: string;
@@ -151,6 +157,9 @@ export function ResourceTable({
                       } else {
                         displayValue = String(value ?? "-");
                       }
+                    } else if (col.key === "producto") {
+                      const rel = (item as unknown as Record<string, unknown>)["producto"] as { nombre?: string } | null;
+                      displayValue = rel?.nombre ?? "-";
                     } else {
                       displayValue = String(value ?? "-").substring(0, 50);
                     }
@@ -164,14 +173,20 @@ export function ResourceTable({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onEdit(item)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(item);
+                      }}
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onDelete(item)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(item);
+                      }}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

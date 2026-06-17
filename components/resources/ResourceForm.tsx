@@ -44,6 +44,7 @@ export function ResourceForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [proveedores, setProveedores] = useState<{ id: number; nombre: string }[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -60,6 +61,11 @@ export function ResourceForm({
       if (tipo === "encargo") {
         loadProductos();
       }
+
+      // Cargar proveedores si es un producto
+      if (tipo === "producto") {
+        loadProveedores();
+      }
     }
   }, [open, item, tipo]);
 
@@ -69,6 +75,15 @@ export function ResourceForm({
       setProductos(response.productos || []);
     } catch (err) {
       console.error("Error cargando productos:", err);
+    }
+  };
+
+  const loadProveedores = async () => {
+    try {
+      const response = await api.getProveedores() as { proveedores: { id: number; nombre: string }[] };
+      setProveedores(response.proveedores || []);
+    } catch (err) {
+      console.error("Error cargando proveedores:", err);
     }
   };
 
@@ -139,6 +154,7 @@ export function ResourceForm({
           { name: "categoria", label: "Categoría", type: "text" },
           { name: "stock", label: "Stock", type: "number" },
           { name: "stock_minimo", label: "Stock Mínimo", type: "number" },
+          { name: "proveedor_id", label: "Proveedor", type: "select", options: proveedores },
           { name: "descripcion", label: "Descripción", type: "textarea" },
         ];
       case "servicio":
@@ -210,7 +226,7 @@ export function ResourceForm({
                   id={field.name}
                   value={(form[field.name] as string | number) || ""}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    handleChange(field.name, field.name === "producto_id" ? Number(e.target.value) : e.target.value)
+                    handleChange(field.name, (field.name === "producto_id" || field.name === "proveedor_id") ? (e.target.value ? Number(e.target.value) : null) : e.target.value)
                   }
                   className="w-full px-3 py-2 border rounded-md"
                   aria-label={field.label}
