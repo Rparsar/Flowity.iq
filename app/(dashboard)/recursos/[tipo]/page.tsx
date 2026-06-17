@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { RecursoTipo, Recurso } from "@/lib/types";
 import { ResourceTable } from "@/components/resources/ResourceTable";
@@ -18,7 +18,9 @@ const RESPONSE_KEY: Record<RecursoTipo, string> = {
 
 export default function RecursoPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const tipo = (params?.tipo as RecursoTipo) || "producto";
+  const editId = searchParams?.get("edit");
 
   const [datos, setDatos] = useState<Recurso[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,17 @@ export default function RecursoPage() {
       }
 
       const key = RESPONSE_KEY[tipo];
-      setDatos((response as Record<string, Recurso[]>)[key] || []);
+      const loadedData = (response as Record<string, Recurso[]>)[key] || [];
+      setDatos(loadedData);
+
+      // Si hay un parámetro edit, buscar el producto y abrir la modal
+      if (editId) {
+        const itemToEdit = loadedData.find((item) => item.id === parseInt(editId));
+        if (itemToEdit) {
+          setSelectedItem(itemToEdit);
+          setFormOpen(true);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar datos");
     } finally {
@@ -58,7 +70,7 @@ export default function RecursoPage() {
 
   useEffect(() => {
     cargarDatos();
-  }, [tipo]);
+  }, [tipo, editId]);
 
   const handleEdit = (item: Recurso) => {
     setSelectedItem(item);

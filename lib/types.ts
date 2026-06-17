@@ -21,10 +21,7 @@ export interface Producto extends RecursoBase {
 
 export interface Servicio extends RecursoBase {}
 
-export interface Reserva extends RecursoBase {
-  fecha_inicio?: string;
-  fecha_fin?: string;
-}
+export interface Reserva extends RecursoBase {}
 
 export interface Encargo extends RecursoBase {
   producto_id?: number;

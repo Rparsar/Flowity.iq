@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -23,14 +23,9 @@ interface SalesLineChartProps {
 export function SalesLineChart({ data }: SalesLineChartProps) {
   return (
     <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+      <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-        <XAxis
-          dataKey="fecha"
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
+        <XAxis dataKey="fecha" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
         <YAxis
           tick={{ fontSize: 12 }}
           tickLine={false}
@@ -41,15 +36,8 @@ export function SalesLineChart({ data }: SalesLineChartProps) {
           formatter={(value) => [`€${Number(value).toLocaleString()}`, "Ventas"]}
           contentStyle={{ borderRadius: "8px", fontSize: "12px" }}
         />
-        <Line
-          type="monotone"
-          dataKey="ventas"
-          stroke="hsl(var(--primary))"
-          strokeWidth={2}
-          dot={{ r: 3 }}
-          activeDot={{ r: 5 }}
-        />
-      </LineChart>
+        <Bar dataKey="ventas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+      </BarChart>
     </ResponsiveContainer>
   );
 }

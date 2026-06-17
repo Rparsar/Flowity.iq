@@ -37,10 +37,22 @@ export function ResourceTable({
   onNew,
 }: ResourceTableProps) {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filtrados = datos.filter((item) =>
     item.nombre.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filtrados.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDatos = filtrados.slice(startIndex, endIndex);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
 
   const getColumns = (): Column[] => {
     switch (tipo) {
@@ -63,8 +75,6 @@ export function ResourceTable({
           { key: "nombre", label: "Nombre" },
           { key: "descripcion", label: "Descripción" },
           { key: "precio", label: "Precio" },
-          { key: "fecha_inicio", label: "Fecha Inicio" },
-          { key: "fecha_fin", label: "Fecha Fin" },
         ];
       case "encargo":
         return [
@@ -94,7 +104,7 @@ export function ResourceTable({
         <Input
           placeholder="Buscar..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="max-w-sm"
         />
         <Button onClick={onNew} className="ml-auto">
@@ -126,7 +136,7 @@ export function ResourceTable({
                 </TableCell>
               </TableRow>
             ) : (
-              filtrados.map((item) => (
+              paginatedDatos.map((item) => (
                 <TableRow key={item.id}>
                   {columns.map((col) => {
                     const value = item[col.key as keyof Recurso];
@@ -172,6 +182,44 @@ export function ResourceTable({
           </TableBody>
         </Table>
       </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-6 border-t">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {startIndex + 1} a {Math.min(endIndex, filtrados.length)} de {filtrados.length} registros
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                  className="w-10 h-10 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

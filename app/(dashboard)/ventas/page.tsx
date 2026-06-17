@@ -44,6 +44,8 @@ export default function VentasPage() {
   const [stats, setStats] = useState<Estadisticas | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchData = () => {
     setLoading(true);
@@ -51,12 +53,18 @@ export default function VentasPage() {
       .then(([v, s]) => {
         setVentas((v as VentasResponse).ventas ?? []);
         setStats(s as Estadisticas);
+        setCurrentPage(1);
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const totalPages = Math.ceil(ventas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedVentas = ventas.slice(startIndex, endIndex);
 
   if (loading) return <LoadingSpinner text="Cargando ventas..." />;
   if (error)
@@ -138,7 +146,6 @@ export default function VentasPage() {
                 <TableHead>ID Venta</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Artículos</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Estado</TableHead>
               </TableRow>
@@ -146,17 +153,16 @@ export default function VentasPage() {
             <TableBody>
               {ventas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No hay ventas registradas
                   </TableCell>
                 </TableRow>
               ) : (
-                ventas.map((sale) => (
+                paginatedVentas.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.codigo}</TableCell>
                     <TableCell>{new Date(sale.fecha).toLocaleDateString("es-ES")}</TableCell>
                     <TableCell>{sale.cliente}</TableCell>
-                    <TableCell>{sale.detalles?.length ?? "—"} items</TableCell>
                     <TableCell>€{Number(sale.total).toFixed(2)}</TableCell>
                     <TableCell>
                       {sale.estado === "completada" && (
@@ -174,6 +180,44 @@ export default function VentasPage() {
               )}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {startIndex + 1} a {Math.min(endIndex, ventas.length)} de {ventas.length} ventas
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-10 h-10 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

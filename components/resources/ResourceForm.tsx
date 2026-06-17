@@ -104,10 +104,10 @@ export function ResourceForm({
       setLoading(true);
       setError("");
 
-      // Preparar datos con fechas formateadas (Reservas y Suscripciones)
+      // Preparar datos con fechas formateadas (Suscripciones)
       const preparedData: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(form)) {
-        if (key === "fecha_inicio" || key === "fecha_fin" || key === "fecha_proximo_pago" || key === "fecha") {
+        if (key === "fecha_proximo_pago" || key === "fecha") {
           const formatted = formatDateTimeForAPI(value);
           if (formatted) preparedData[key] = formatted;
         } else {
@@ -152,8 +152,6 @@ export function ResourceForm({
           { name: "descripcion", label: "Descripción", type: "textarea" },
           { name: "precio", label: "Precio", type: "number" },
           { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
-          { name: "fecha_inicio", label: "Fecha Inicio", type: "datetime-local" },
-          { name: "fecha_fin", label: "Fecha Fin", type: "datetime-local" },
         ];
       case "encargo":
         return [
@@ -282,6 +280,24 @@ export function ResourceForm({
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     const permitidos = /[0-9+\-() ]|Backspace|Delete|Tab/;
                     if (!permitidos.test(e.key)) e.preventDefault();
+                  }}
+                  placeholder={field.label}
+                  required={field.required}
+                />
+              ) : field.name === "stock" || field.name === "stock_minimo" ? (
+                <Input
+                  id={field.name}
+                  type="text"
+                  value={(form[field.name] as string | number) || ""}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const valor = e.target.value.replace(/[^0-9]/g, "");
+                    handleChange(field.name, valor ? Number(valor) : "");
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    const permitidos = /[0-9]|Backspace|Delete|Tab|ArrowLeft|ArrowRight|ArrowUp|ArrowDown/;
+                    if (!permitidos.test(e.key) && !(e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase()))) {
+                      e.preventDefault();
+                    }
                   }}
                   placeholder={field.label}
                   required={field.required}

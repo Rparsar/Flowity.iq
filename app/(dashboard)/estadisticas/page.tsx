@@ -8,6 +8,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { MonthlySalesBarChart } from "@/components/charts/MonthlySalesBarChart";
 import { SalesPieChart } from "@/components/charts/SalesPieChart";
 
+type Periodo = "mensual" | "semanal" | "diario";
+
 interface Kpis {
   ingresos_totales: number;
   ventas_totales: number;
@@ -29,22 +31,43 @@ interface VentaHistorica {
   pedidos: number;
 }
 
+interface GraficaData {
+  mensual: VentaHistorica[];
+  semanal: VentaHistorica[];
+  diario: VentaHistorica[];
+}
+
 interface DashboardData {
   kpis: Kpis;
   ventas_historicas: VentaHistorica[];
 }
 
+const PERIODOS: { key: Periodo; label: string }[] = [
+  { key: "mensual", label: "Mes" },
+  { key: "semanal", label: "Semana" },
+  { key: "diario",  label: "Día" },
+];
+
+const DESCRIPCIONES: Record<Periodo, string> = {
+  mensual: "Últimos 12 meses",
+  semanal: "Últimas 4 semanas",
+  diario:  "Últimos 30 días",
+};
+
 export default function EstadisticasPage() {
   const [dashData, setDashData] = useState<DashboardData | null>(null);
+  const [graficaData, setGraficaData] = useState<GraficaData | null>(null);
   const [stats, setStats] = useState<Estadisticas | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [periodo, setPeriodo] = useState<Periodo>("mensual");
 
   useEffect(() => {
-    Promise.all([api.getDashboard(), api.getEstadisticasVentas()])
-      .then(([d, s]) => {
+    Promise.all([api.getDashboard(), api.getEstadisticasVentas(), api.getGraficaEvolucion()])
+      .then(([d, s, g]) => {
         setDashData(d as DashboardData);
         setStats(s as Estadisticas);
+        setGraficaData(g as GraficaData);
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
@@ -59,7 +82,7 @@ export default function EstadisticasPage() {
     );
 
   const kpis = dashData?.kpis;
-  const historicas = dashData?.ventas_historicas ?? [];
+  const chartData = graficaData ? graficaData[periodo] : [];
 
   const pieData = stats
     ? [
@@ -142,12 +165,31 @@ export default function EstadisticasPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Evolución Mensual</CardTitle>
-            <CardDescription>Ingresos por período</CardDescription>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle>Evolución de Ventas</CardTitle>
+                <CardDescription>{DESCRIPCIONES[periodo]}</CardDescription>
+              </div>
+              <div className="flex rounded-md border overflow-hidden shrink-0">
+                {PERIODOS.map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setPeriodo(p.key)}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      periodo === p.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {historicas.length > 0 ? (
-              <MonthlySalesBarChart data={historicas} />
+            {chartData.length > 0 ? (
+              <MonthlySalesBarChart data={chartData} />
             ) : (
               <p className="text-sm text-muted-foreground py-8 text-center">Sin datos históricos</p>
             )}

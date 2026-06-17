@@ -83,6 +83,7 @@ export const api = {
   getDashboard: () => apiFetch("/dashboard"),
   getKpis: () => apiFetch("/dashboard/kpis"),
   getAlertas: () => apiFetch("/dashboard/alertas"),
+  getGraficaEvolucion: () => apiFetch("/dashboard/grafica-evolucion"),
 
   // Productos
   getProductos: (params?: string) => apiFetch(`/productos${params || ""}`),

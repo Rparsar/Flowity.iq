@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ interface AlertaStock {
   nombre: string;
   stock: number;
   stock_minimo: number;
+  estado_alerta: 'critico' | 'bajo';
 }
 
 interface UltimaVenta {
@@ -43,11 +45,13 @@ interface UltimaVenta {
 interface DashboardData {
   kpis: Kpis;
   ventas_historicas: VentaHistorica[];
+  ventas_semanales: VentaHistorica[];
   alertas_stock: AlertaStock[];
   ultimas_ventas: UltimaVenta[];
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,7 +73,7 @@ export default function DashboardPage() {
     );
   if (!data) return null;
 
-  const { kpis, ventas_historicas, alertas_stock, ultimas_ventas } = data;
+  const { kpis, ventas_semanales, alertas_stock, ultimas_ventas } = data;
 
   const stats = [
     {
@@ -150,11 +154,11 @@ export default function DashboardPage() {
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Evolución de Ventas</CardTitle>
-            <CardDescription>Ingresos por período</CardDescription>
+            <CardDescription>Últimas 4 semanas</CardDescription>
           </CardHeader>
           <CardContent>
-            {ventas_historicas.length > 0 ? (
-              <SalesLineChart data={ventas_historicas} />
+            {ventas_semanales.length > 0 ? (
+              <SalesLineChart data={ventas_semanales} />
             ) : (
               <p className="text-sm text-muted-foreground py-8 text-center">Sin datos históricos</p>
             )}
@@ -164,24 +168,40 @@ export default function DashboardPage() {
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Alertas de Inventario</CardTitle>
-            <CardDescription>{alertas_stock.length} productos con stock bajo</CardDescription>
+            <CardDescription>{alertas_stock.length} productos con alertas</CardDescription>
           </CardHeader>
           <CardContent>
             {alertas_stock.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">Sin alertas de stock</p>
             ) : (
-              <div className="space-y-4">
-                {alertas_stock.slice(0, 5).map((item) => (
-                  <div key={item.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{item.nombre}</p>
-                      <p className="text-xs text-muted-foreground">Mínimo: {item.stock_minimo} unidades</p>
-                    </div>
-                    <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
-                      {item.stock} restantes
-                    </span>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                {alertas_stock.slice(0, 5).map((item) => {
+                  const isCritico = item.estado_alerta === 'critico';
+                  const bgColor = isCritico ? 'bg-red-50 hover:bg-red-100' : 'bg-yellow-50 hover:bg-yellow-100';
+                  const badgeBg = isCritico ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700';
+                  const badgeText = isCritico ? 'Crítico' : 'Bajo';
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => router.push(`/recursos/producto?edit=${item.id}`)}
+                      className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${bgColor} cursor-pointer`}
+                    >
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
+                        <p className="text-xs text-gray-600">Mínimo: {item.stock_minimo} unidades</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${badgeBg}`}>
+                          {item.stock} restantes
+                        </span>
+                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${badgeBg}`}>
+                          {badgeText}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </CardContent>

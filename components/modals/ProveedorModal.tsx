@@ -54,16 +54,47 @@ export function ProveedorModal({ open, onClose, onSaved, proveedor }: ProveedorM
   }, [open, proveedor]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    let value = e.target.value;
+    
+    // Validar teléfono: solo números, +, -, (), espacios
+    if (e.target.name === "telefono") {
+      value = value.replace(/[^0-9+\-() ]/g, "");
+    }
+    
+    setForm((prev) => ({ ...prev, [e.target.name]: value }));
+  };
+
+  const isValidEmail = (email: string): boolean => {
+    if (!email) return true; // Email es opcional
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isValidTelefono = (telefono: string): boolean => {
+    if (!telefono) return true; // Teléfono es opcional
+    return telefono.replace(/[^0-9]/g, "").length >= 9;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validar email
+    if (!isValidEmail(form.email ?? "")) {
+      setError("El email no es válido");
+      return;
+    }
+
+    // Validar teléfono
+    if (!isValidTelefono(form.telefono ?? "")) {
+      setError("El teléfono debe tener al menos 9 dígitos");
+      return;
+    }
+
     setLoading(true);
     try {
-      if (proveedor?.id) {
-        await api.actualizarProveedor(proveedor.id, form as unknown as Record<string, unknown>);
+      if (form.id) {
+        await api.actualizarProveedor(form.id, form as unknown as Record<string, unknown>);
       } else {
         await api.crearProveedor(form as unknown as Record<string, unknown>);
       }
@@ -97,11 +128,27 @@ export function ProveedorModal({ open, onClose, onSaved, proveedor }: ProveedorM
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" value={form.email ?? ""} onChange={handleChange} />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email ?? ""}
+                onChange={handleChange}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" name="telefono" value={form.telefono ?? ""} onChange={handleChange} />
+              <Input
+                id="telefono"
+                name="telefono"
+                type="tel"
+                value={form.telefono ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  const permitidos = /[0-9+\-() ]|Backspace|Delete|Tab/;
+                  if (!permitidos.test(e.key)) e.preventDefault();
+                }}
+              />
             </div>
           </div>
           <div className="space-y-1">
