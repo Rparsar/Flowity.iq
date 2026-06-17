@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { RecursoTipo, Recurso } from "@/lib/types";
 import { ResourceTable } from "@/components/resources/ResourceTable";
 import { ResourceForm } from "@/components/resources/ResourceForm";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 // Mapeo explícito de tipos a keys de respuesta API
@@ -27,6 +28,9 @@ export default function RecursoPage() {
   const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Recurso | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Recurso | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const cargarDatos = async () => {
     try {
@@ -77,27 +81,37 @@ export default function RecursoPage() {
     setFormOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este registro?")) return;
+  const handleDelete = (item: Recurso) => {
+    setItemToDelete(item);
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete?.id) return;
+
+    setDeleting(true);
     try {
       switch (tipo) {
         case "servicio":
-          await api.eliminarServicio(id);
+          await api.eliminarServicio(itemToDelete.id);
           break;
         case "reserva":
-          await api.eliminarReserva(id);
+          await api.eliminarReserva(itemToDelete.id);
           break;
         case "encargo":
-          await api.eliminarEncargo(id);
+          await api.eliminarEncargo(itemToDelete.id);
           break;
         case "producto":
         default:
-          await api.eliminarProducto(id);
+          await api.eliminarProducto(itemToDelete.id);
       }
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
       cargarDatos();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al eliminar");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -182,6 +196,19 @@ export default function RecursoPage() {
         }}
         onSave={handleSave}
         item={selectedItem}
+      />
+
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title={`¿Eliminar ${tipo}?`}
+        description={`Esta acción no se puede deshacer. El ${tipo} se eliminará permanentemente.`}
+        itemName={itemToDelete?.nombre}
+        loading={deleting}
       />
     </div>
   );

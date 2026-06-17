@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Phone, Mail, Plus, Truck, Pencil, Trash2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ProveedorModal } from "@/components/modals/ProveedorModal";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 
 interface Proveedor {
   id: number;
@@ -31,6 +32,8 @@ export default function ProveedoresPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editProveedor, setEditProveedor] = useState<Proveedor | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Proveedor | null>(null);
 
   const fetchProveedores = () => {
     setLoading(true);
@@ -55,11 +58,19 @@ export default function ProveedoresPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Eliminar este proveedor?")) return;
-    setDeletingId(id);
+  const handleDelete = (supplier: Proveedor) => {
+    setItemToDelete(supplier);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete?.id) return;
+
+    setDeletingId(itemToDelete.id);
     try {
-      await api.eliminarProveedor(id);
+      await api.eliminarProveedor(itemToDelete.id);
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
       fetchProveedores();
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Error al eliminar");
@@ -176,7 +187,7 @@ export default function ProveedoresPage() {
                     variant="outline"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(supplier.id)}
+                    onClick={() => handleDelete(supplier)}
                     disabled={deletingId === supplier.id}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -193,6 +204,19 @@ export default function ProveedoresPage() {
         onClose={() => setModalOpen(false)}
         onSaved={fetchProveedores}
         proveedor={editProveedor}
+      />
+
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="¿Eliminar proveedor?"
+        description="Esta acción no se puede deshacer. El proveedor se eliminará permanentemente."
+        itemName={itemToDelete?.nombre}
+        loading={deletingId !== null}
       />
     </div>
   );

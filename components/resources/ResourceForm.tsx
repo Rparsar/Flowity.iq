@@ -171,8 +171,8 @@ export function ResourceForm({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[calc(100vh-4rem)] p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>
             {item ? `Editar ${tipo}` : `Crear ${tipo}`}
           </DialogTitle>
@@ -181,7 +181,7 @@ export function ResourceForm({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="px-6 overflow-y-auto max-h-[calc(100vh-16rem)] space-y-4 scrollbar-hide">
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded space-y-1">
               {error.split("\n").map((msg, i) => (
@@ -321,7 +321,7 @@ export function ResourceForm({
           ))}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="px-6 pb-6 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

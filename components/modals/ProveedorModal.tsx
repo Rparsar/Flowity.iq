@@ -109,14 +109,14 @@ export function ProveedorModal({ open, onClose, onSaved, proveedor }: ProveedorM
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[480px] max-h-[calc(100vh-4rem)] p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>{proveedor?.id ? "Editar Proveedor" : "Nuevo Proveedor"}</DialogTitle>
           <DialogDescription>
             {proveedor?.id ? "Actualiza los datos del proveedor." : "Completa los datos del nuevo proveedor."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 overflow-y-auto max-h-[calc(100vh-16rem)] space-y-4 scrollbar-hide">
           <div className="space-y-1">
             <Label htmlFor="nombre">Nombre de la empresa</Label>
             <Input id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
@@ -160,7 +160,7 @@ export function ProveedorModal({ open, onClose, onSaved, proveedor }: ProveedorM
             <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="px-6 pb-6 pt-4 border-t">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>

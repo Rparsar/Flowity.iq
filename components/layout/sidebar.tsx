@@ -73,9 +73,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex flex-col h-full bg-sidebar">
         <div className="flex items-center h-16 px-6 border-b border-sidebar-border">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">F</span>
-            </div>
+            <img src="/flowity.iq_icono.png" alt="Flowity.iq" className="w-20 h-15" />
             <span className="text-sidebar-foreground font-semibold text-lg">Flowity.iq</span>
           </Link>
         </div>
@@ -243,9 +241,7 @@ export function MobileSidebar() {
         <div className="flex flex-col h-full">
           <div className="flex items-center h-16 px-6 border-b border-sidebar-border">
             <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">F</span>
-              </div>
+              <img src="/flowity.iq_icono.png" alt="Flowity.iq" className="w-20 h-15" />
               <span className="text-sidebar-foreground font-semibold text-lg">Flowity.iq</span>
             </Link>
           </div>

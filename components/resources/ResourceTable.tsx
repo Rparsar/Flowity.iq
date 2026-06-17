@@ -24,7 +24,7 @@ interface ResourceTableProps {
   datos: Recurso[];
   loading: boolean;
   onEdit: (item: Recurso) => void;
-  onDelete: (id: number) => void;
+  onDelete: (item: Recurso) => void;
   onNew: () => void;
 }
 
@@ -171,7 +171,7 @@ export function ResourceTable({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onDelete(item.id)}
+                      onClick={() => onDelete(item)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
