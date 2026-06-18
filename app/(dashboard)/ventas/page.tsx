@@ -13,8 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { VentaDetailModal } from "@/components/modals/VentaDetailModal";
 
 interface Venta {
   id: number;
@@ -45,6 +46,8 @@ export default function VentasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedVentaId, setSelectedVentaId] = useState<number | null>(null);
   const itemsPerPage = 10;
 
   const fetchData = () => {
@@ -85,10 +88,6 @@ export default function VentasPage() {
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Exportar
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Venta
           </Button>
         </div>
       </div>
@@ -159,7 +158,14 @@ export default function VentasPage() {
                 </TableRow>
               ) : (
                 paginatedVentas.map((sale) => (
-                  <TableRow key={sale.id}>
+                  <TableRow
+                    key={sale.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => {
+                      setSelectedVentaId(sale.id);
+                      setDetailOpen(true);
+                    }}
+                  >
                     <TableCell className="font-medium">{sale.codigo}</TableCell>
                     <TableCell>{new Date(sale.fecha).toLocaleDateString("es-ES")}</TableCell>
                     <TableCell>{sale.cliente}</TableCell>
@@ -220,6 +226,12 @@ export default function VentasPage() {
           )}
         </CardContent>
       </Card>
+      <VentaDetailModal
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        ventaId={selectedVentaId}
+        onStatusChange={fetchData}
+      />
     </div>
   );
 }
