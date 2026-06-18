@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, DollarSign, Package, ShoppingCart, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Package, ShoppingCart, Users, Download } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { SalesLineChart } from "@/components/charts/SalesLineChart";
 
@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [printMode, setPrintMode] = useState(false);
 
   useEffect(() => {
     api
@@ -63,6 +64,14 @@ export default function DashboardPage() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const handlePrint = () => {
+    setPrintMode(true);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setPrintMode(false), 100);
+    }, 100);
+  };
 
   if (loading) return <LoadingSpinner text="Cargando dashboard..." />;
   if (error)
@@ -119,10 +128,13 @@ export default function DashboardPage() {
             Resumen general de tu negocio
           </p>
         </div>
-        <Button>Exportar Reporte</Button>
+        <Button variant="outline" onClick={handlePrint} className="no-print">
+          <Download className="mr-2 h-4 w-4" />
+          Exportar Reporte
+        </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print-break-avoid">
         {stats.map((stat) => {
           const Icon = stat.icon;
           const TrendIcon = stat.trend === "up" ? TrendingUp : TrendingDown;
@@ -150,7 +162,7 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 print-break-avoid">
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Evolución de Ventas</CardTitle>
@@ -208,7 +220,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="print-break-avoid">
         <CardHeader>
           <CardTitle>Ventas Recientes</CardTitle>
           <CardDescription>Últimas transacciones realizadas</CardDescription>

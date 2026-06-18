@@ -48,6 +48,7 @@ export default function VentasPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedVentaId, setSelectedVentaId] = useState<number | null>(null);
+  const [printMode, setPrintMode] = useState(false);
   const itemsPerPage = 10;
 
   const fetchData = () => {
@@ -67,7 +68,15 @@ export default function VentasPage() {
   const totalPages = Math.ceil(ventas.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedVentas = ventas.slice(startIndex, endIndex);
+  const paginatedVentas = printMode ? ventas : ventas.slice(startIndex, endIndex);
+
+  const handlePrint = () => {
+    setPrintMode(true);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setPrintMode(false), 100);
+    }, 100);
+  };
 
   if (loading) return <LoadingSpinner text="Cargando ventas..." />;
   if (error)
@@ -85,14 +94,14 @@ export default function VentasPage() {
           <p className="text-muted-foreground mt-1">Registro y seguimiento de ventas</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handlePrint} className="no-print">
             <Download className="mr-2 h-4 w-4" />
-            Exportar
+            Exportar Historial
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 print-break-avoid">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Ventas</CardTitle>
@@ -186,8 +195,8 @@ export default function VentasPage() {
               )}
             </TableBody>
           </Table>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+          {totalPages > 1 && !printMode && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t no-print">
               <div className="text-sm text-muted-foreground">
                 Mostrando {startIndex + 1} a {Math.min(endIndex, ventas.length)} de {ventas.length} ventas
               </div>

@@ -84,3 +84,38 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+@media print {
+.no-print {
+    display: none !important;
+  }
+
+  /* Ocultar sidebar, header, footer */
+  aside,
+  header,
+  footer,
+  .no-print-sidebar {
+    display: none !important;
+  }
+
+  /* Ajustar layout para impresión */
+  body {
+    background: white !important;
+  }
+
+  /* Asegurar que la tabla se vea completa */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Forzar colores de texto para impresión */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

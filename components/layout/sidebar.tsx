@@ -69,7 +69,7 @@ export function Sidebar({ className }: SidebarProps) {
     : "?";
 
   return (
-    <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0", className)}>
+    <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 no-print-sidebar", className)}>
       <div className="flex flex-col h-full bg-sidebar">
         <div className="flex items-center h-16 px-6 border-b border-sidebar-border">
           <Link href="/dashboard" className="flex items-center gap-2">
