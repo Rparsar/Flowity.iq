@@ -29,7 +29,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <div className="flex-1">{children}</div>
+          <footer className="border-t py-3 px-6 lg:pl-70 flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              © Flowity.iq {new Date().getFullYear()}
+            </span>
+            <span>v1.0</span>
+          </footer>
+        </AuthProvider>
       </body>
     </html>
   );

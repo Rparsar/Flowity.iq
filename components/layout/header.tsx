@@ -13,11 +13,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, Search, User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+
+function getPageName(pathname: string): string {
+  const segment = pathname.split("/").filter(Boolean).pop() || "panel";
+  return segment.charAt(0).toUpperCase() + segment.slice(1);
+}
 
 export function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await logout();
@@ -28,6 +34,8 @@ export function Header() {
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : "?";
 
+  const currentPage = getPageName(pathname || "/dashboard");
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-4 lg:px-8">
@@ -36,7 +44,7 @@ export function Header() {
           <div className="hidden md:flex items-center gap-2 text-muted-foreground">
             <span className="text-sm">Flowity.iq</span>
             <span className="text-muted-foreground/40">/</span>
-            <span className="text-sm font-medium text-foreground">Dashboard</span>
+            <span className="text-sm font-medium text-foreground">{currentPage}</span>
           </div>
         </div>
 

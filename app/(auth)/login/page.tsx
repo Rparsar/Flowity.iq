@@ -33,15 +33,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-background flex items-start justify-center pt-20 p-4">
+      <div className="w-full max-w-md space-y-10">
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <BarChart3 className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img src="/flowity.iq_logo.png" alt="Flowity.iq" className="w-55 h-40" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Flowity.iq</h1>
           <p className="text-muted-foreground text-sm">Gestión inteligente de tu negocio</p>
         </div>
 
@@ -94,12 +91,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            <div className="mt-4 p-3 rounded-md bg-muted text-xs text-muted-foreground space-y-1">
-              <p className="font-medium">Credenciales de prueba:</p>
-              <p>Admin: admin@flowity.iq / password</p>
-              <p>User: user@flowity.iq / password</p>
-            </div>
           </CardContent>
         </Card>
       </div>
