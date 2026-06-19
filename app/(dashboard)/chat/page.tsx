@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, Package, TrendingUp, AlertCircle } from "lucide-react";
+import { api } from "@/lib/api";
 
 const suggestions = [
   "¿Cuál es el stock actual?",
@@ -36,7 +37,7 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = {
@@ -47,51 +48,29 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = input;
     setInput("");
 
-    setTimeout(() => {
-      const botResponse = generateResponse(input);
+    try {
+      const response = await api.chat(userInput);
+      const botResponse = {
+        id: messages.length + 2,
+        type: "bot",
+        content: response.respuesta,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
       setMessages((prev) => [...prev, botResponse]);
-    }, 500);
+    } catch (error) {
+      const errorMessage = {
+        id: messages.length + 2,
+        type: "bot",
+        content: "Lo siento, hubo un error al procesar tu consulta. Por favor, intenta nuevamente.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
-  const generateResponse = (userInput: string) => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes("stock") || input.includes("inventario")) {
-      return {
-        id: messages.length + 2,
-        type: "bot",
-        content: "Actualmente tienes 847 productos en stock. 12 productos están por debajo del mínimo recomendado, incluyendo Webcam HD (2 unidades) y Monitor 4K (3 unidades).",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-    }
-    
-    if (input.includes("venta") || input.includes("facturación")) {
-      return {
-        id: messages.length + 2,
-        type: "bot",
-        content: "Esta semana has realizado 89 ventas por un total de €12,450. El día con más ventas fue el martes con €3,240. El producto más vendido fue el Teclado Mecánico RGB.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-    }
-    
-    if (input.includes("rentable") || input.includes("margen")) {
-      return {
-        id: messages.length + 2,
-        type: "bot",
-        content: "El producto más rentable es la Laptop HP ProBook con un margen del 35%. Le siguen los Auriculares Bluetooth (28%) y los Monitores 27\" 4K (24%).",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-    }
-    
-    return {
-      id: messages.length + 2,
-      type: "bot",
-      content: "Entiendo tu consulta. Como asistente especializado en Flowity.iq, puedo ayudarte con información sobre stock, ventas, proveedores y análisis de tu negocio. ¿Te gustaría saber algo específico?",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-7rem)]">

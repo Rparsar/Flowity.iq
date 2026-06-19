@@ -85,6 +85,9 @@ export const api = {
   getAlertas: () => apiFetch("/dashboard/alertas"),
   getGraficaEvolucion: () => apiFetch("/dashboard/grafica-evolucion"),
 
+  // Chat
+  chat: (mensaje: string) => apiFetch<{ respuesta: string }>("/chat", { method: "POST", body: { mensaje } }),
+
   // Productos
   getProductos: (params?: string) => apiFetch(`/productos${params || ""}`),
   getProducto: (id: number) => apiFetch(`/productos/${id}`),
