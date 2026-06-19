@@ -10,7 +10,7 @@ Flowity.iq es el panel de administración centralizado que permite a los gestore
 - **🛍️ Gestión de Ventas**: Historial completo de transacciones, detalle de ventas individuales con desglose por productos/servicios/reservas/encargos, y sistema de cambio de estados (completar/cancelar)
 - **📦 Control de Inventario**: Alertas de stock bajo y crítico, navegación directa a edición de productos, seguimiento de recursos
 - **🤖 Asistente IA**: Chat integrado para consultas y análisis de datos
-- **📑 Catálogo de Recursos**: Gestión de productos, servicios, reservas y encargos con CRUD completo
+- **📑 Catálogo de Recursos**: Gestión de productos, servicios, reservas, encargos y suscripciones con CRUD completo
 - **🚚 Proveedores**: Registro y seguimiento de proveedores
 - **📤 Exportación**: Generación de reportes en PDF con formato A3
 
@@ -96,7 +96,7 @@ flowity.iq/
 │   │   ├── 📁 ia/                   # Módulo de inteligencia artificial
 │   │   ├── 📁 proveedores/          # Gestión de proveedores
 │   │   ├── 📁 recursos/             # Catálogo de recursos
-│   │   │   └── 📁 [tipo]/           # Rutas dinámicas por tipo (producto, servicio, etc.)
+│   │   │   └── 📁 [tipo]/           # Rutas dinámicas por tipo (producto, servicio, reserva, encargo, suscripcion)
 │   │   └── 📁 ventas/               # Gestión de ventas con exportación PDF
 │   ├── 📄 globals.css               # Estilos globales + CSS @media print
 │   ├── 📄 layout.tsx                # Layout principal (sidebar, header, footer)
