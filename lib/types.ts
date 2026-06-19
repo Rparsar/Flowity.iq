@@ -1,4 +1,4 @@
-export type RecursoTipo = 'producto' | 'servicio' | 'reserva' | 'encargo';
+export type RecursoTipo = 'producto' | 'servicio' | 'reserva' | 'encargo' | 'suscripcion';
 
 export interface RecursoBase {
   id: number;
@@ -28,17 +28,13 @@ export interface Encargo extends RecursoBase {
   dia_semana?: 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
 }
 
-export interface Suscripcion {
-  id: number;
-  suscriptible_id: number;
-  suscriptible_type: string;
-  tipo_periodo: 'dia' | 'semana' | 'mes' | 'año';
-  cantidad_periodos: number;
-  fecha_inicio: string;
-  fecha_proximo_pago: string;
-  estado: 'activa' | 'pausada' | 'cancelada';
-  created_at: string;
-  updated_at: string;
+export interface Suscripcion extends RecursoBase {
+  planes: ('mensual' | 'trimestral' | 'semestral')[];
+  producto_id?: number;
+  producto?: {
+    id: number;
+    nombre: string;
+  };
 }
 
-export type Recurso = Producto | Servicio | Reserva | Encargo;
+export type Recurso = Producto | Servicio | Reserva | Encargo | Suscripcion;

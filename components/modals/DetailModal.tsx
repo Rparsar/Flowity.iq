@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { RecursoTipo, Recurso, Producto, Encargo } from "@/lib/types";
+import { RecursoTipo, Recurso, Producto, Encargo, Suscripcion } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +55,9 @@ export function DetailModal({ open, onClose, tipo, itemId }: DetailModalProps) {
           break;
         case "encargo":
           response = await api.getEncargo(itemId!);
+          break;
+        case "suscripcion":
+          response = await api.getSuscripcion(itemId!);
           break;
         case "producto":
         default:
@@ -134,6 +137,21 @@ export function DetailModal({ open, onClose, tipo, itemId }: DetailModalProps) {
     );
   };
 
+  const renderSuscripcionFields = (data: Suscripcion) => {
+    const dataWithRelation = data as Suscripcion & { producto?: { id: number; nombre: string } };
+    return (
+      <>
+        {renderField(<DollarSign className="h-4 w-4" />, "Precio", `${data.precio} €`)}
+        {renderField(<Calendar className="h-4 w-4" />, "Planes", data.planes?.join(', ') || '-')}
+        {renderField(
+          <Layers className="h-4 w-4" />,
+          "Producto",
+          dataWithRelation.producto?.nombre || (data.producto_id ? `ID: ${data.producto_id}` : undefined)
+        )}
+      </>
+    );
+  };
+
   const renderFields = () => {
     if (!item) return null;
     switch (tipo) {
@@ -145,6 +163,8 @@ export function DetailModal({ open, onClose, tipo, itemId }: DetailModalProps) {
         return renderReservaFields();
       case "encargo":
         return renderEncargoFields(item as Encargo);
+      case "suscripcion":
+        return renderSuscripcionFields(item as Suscripcion);
       default:
         return renderServicioFields();
     }

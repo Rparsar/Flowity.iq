@@ -50,15 +50,15 @@ export function ResourceForm({
     if (open) {
       if (item) {
         // Filtrar campos de sistema antes de cargar el formulario
-        const { id, created_at, updated_at, ...editable } = item as Record<string, unknown>;
+        const { id, created_at, updated_at, ...editable } = item as unknown as Record<string, unknown>;
         setForm(editable);
       } else {
         setForm({});
       }
       setError("");
 
-      // Cargar productos si es un encargo
-      if (tipo === "encargo") {
+      // Cargar productos si es un encargo o suscripcion
+      if (tipo === "encargo" || tipo === "suscripcion") {
         loadProductos();
       }
 
@@ -178,6 +178,15 @@ export function ResourceForm({
           { name: "producto_id", label: "Producto", type: "select", options: productos },
           { name: "dia_semana", label: "Día de la Semana", type: "select", options: ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"] },
         ];
+      case "suscripcion":
+        return [
+          { name: "nombre", label: "Nombre", type: "text", required: true },
+          { name: "descripcion", label: "Descripción", type: "textarea" },
+          { name: "precio", label: "Precio", type: "number", required: true },
+          { name: "planes", label: "Planes", type: "checkboxes", options: ["mensual", "trimestral", "semestral"], required: true },
+          { name: "estado", label: "Estado", type: "select", options: ["activo", "inactivo"] },
+          { name: "producto_id", label: "Producto", type: "select", options: productos },
+        ];
       default:
         return baseFields;
     }
@@ -248,6 +257,33 @@ export function ResourceForm({
                     }
                   })}
                 </select>
+              ) : field.type === "checkboxes" ? (
+                <div className="space-y-2">
+                  {field.options?.map((opt) => {
+                    if (typeof opt === "string") {
+                      const isChecked = Array.isArray(form[field.name]) && (form[field.name] as string[]).includes(opt);
+                      return (
+                        <label key={opt} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const currentArray = (form[field.name] as string[]) || [];
+                              if (e.target.checked) {
+                                handleChange(field.name, [...currentArray, opt]);
+                              } else {
+                                handleChange(field.name, currentArray.filter((item) => item !== opt));
+                              }
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <span className="capitalize">{opt}</span>
+                        </label>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
               ) : field.name === "precio" ? (
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>

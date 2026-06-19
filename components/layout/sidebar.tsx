@@ -25,6 +25,7 @@ import {
   Wrench,
   Calendar,
   ClipboardList,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,6 +45,7 @@ const resourceSubItems = [
   { name: "Servicios", href: "/recursos/servicio", icon: Wrench },
   { name: "Reservas", href: "/recursos/reserva", icon: Calendar },
   { name: "Encargos", href: "/recursos/encargo", icon: ClipboardList },
+  { name: "Suscripciones", href: "/recursos/suscripcion", icon: CreditCard },
   { name: "Nuevo recurso", href: "#", icon: Plus },
 ];
 

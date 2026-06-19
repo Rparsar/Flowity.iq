@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Wrench, Calendar, ClipboardList, ArrowRight, Loader2 } from "lucide-react";
+import { Package, Wrench, Calendar, ClipboardList, CreditCard, ArrowRight, Loader2 } from "lucide-react";
 
 const resourceTypesBase = [
   {
@@ -36,6 +36,13 @@ const resourceTypesBase = [
     icon: ClipboardList,
     color: "bg-amber-500",
   },
+  {
+    id: "suscripcion",
+    name: "Suscripciones",
+    description: "Planes de suscripción y pagos recurrentes",
+    icon: CreditCard,
+    color: "bg-rose-500",
+  },
 ];
 
 export default function RecursosPage() {
@@ -47,20 +54,22 @@ export default function RecursosPage() {
     const loadCounts = async () => {
       try {
         setLoading(true);
-        const [productos, servicios, reservas, encargos] = await Promise.all([
+        const [productos, servicios, reservas, encargos, suscripciones] = await Promise.all([
           api.getProductos(),
           api.getServicios(),
           api.getReservas(),
           api.getEncargos(),
+          api.getSuscripciones(),
         ]);
         setCounts({
           producto: (productos as { total?: number }).total ?? 0,
           servicio: (servicios as { total?: number }).total ?? 0,
           reserva: (reservas as { total?: number }).total ?? 0,
           encargo: (encargos as { total?: number }).total ?? 0,
+          suscripcion: (suscripciones as { total?: number }).total ?? 0,
         });
       } catch {
-        setCounts({ producto: 0, servicio: 0, reserva: 0, encargo: 0 });
+        setCounts({ producto: 0, servicio: 0, reserva: 0, encargo: 0, suscripcion: 0 });
       } finally {
         setLoading(false);
       }

@@ -86,6 +86,14 @@ export function ResourceTable({
           { key: "producto", label: "Producto" },
           { key: "dia_semana", label: "Día Semana" },
         ];
+      case "suscripcion":
+        return [
+          { key: "nombre", label: "Nombre" },
+          { key: "descripcion", label: "Descripción" },
+          { key: "precio", label: "Precio" },
+          { key: "planes", label: "Planes" },
+          { key: "producto", label: "Producto" },
+        ];
       default:
         return [
           { key: "nombre", label: "Nombre" },
@@ -157,6 +165,9 @@ export function ResourceTable({
                       } else {
                         displayValue = String(value ?? "-");
                       }
+                    } else if (col.key === "planes") {
+                      const planesArray = value as string[] | undefined;
+                      displayValue = planesArray?.join(', ') || '-';
                     } else if (col.key === "producto") {
                       const rel = (item as unknown as Record<string, unknown>)["producto"] as { nombre?: string } | null;
                       displayValue = rel?.nombre ?? "-";
